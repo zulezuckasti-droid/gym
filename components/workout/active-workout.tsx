@@ -1,30 +1,36 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { Check, X } from "lucide-react";
+import { Plus, X } from "lucide-react";
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
+import {
+  Drawer,
+  DrawerContent,
+  DrawerDescription,
+  DrawerHeader,
+  DrawerTitle,
+} from "@/components/ui/drawer";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { WorkoutExerciseCard } from "@/components/workout/workout-exercise-card";
 import {
-  canConfirmSet,
   draftHasConfirmedSet,
   draftVolume,
   formatDuration,
   formatVolume,
 } from "@/lib/workout/helpers";
 import { useWorkoutStore } from "@/lib/workout/store";
-import { cn } from "@/lib/utils";
 
 export function ActiveWorkout({ workoutId }: { workoutId: string }) {
   const router = useRouter();
+  const [addExerciseOpen, setAddExerciseOpen] = useState(false);
   const hydrated = useWorkoutStore((state) => state.hydrated);
   const draft = useWorkoutStore((state) => state.draft);
   const syncStatus = useWorkoutStore((state) => state.syncStatus);
   const pendingStart = useWorkoutStore((state) => state.pendingStart);
-  const updateSet = useWorkoutStore((state) => state.updateSet);
-  const confirmSet = useWorkoutStore((state) => state.confirmSet);
+  const addExercise = useWorkoutStore((state) => state.addExercise);
   const setNotes = useWorkoutStore((state) => state.setNotes);
   const openSummary = useWorkoutStore((state) => state.openSummary);
   const closeSummary = useWorkoutStore((state) => state.closeSummary);
@@ -223,73 +229,22 @@ export function ActiveWorkout({ workoutId }: { workoutId: string }) {
 
       <div className="flex-1 space-y-4 overflow-y-auto px-4 py-4">
         {draft.exercises.map((exercise) => (
-          <Card key={exercise.id}>
-            <CardHeader className="pb-0">
-              <CardTitle className="text-lg">{exercise.name}</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-3 pt-4">
-              <div className="grid grid-cols-[2rem_1fr_1fr_2.75rem] gap-2 px-0.5 text-xs font-medium text-muted-foreground">
-                <span>SET</span>
-                <span>KG</span>
-                <span>REPS</span>
-                <span className="sr-only">Confirm</span>
-              </div>
-              {exercise.sets.map((set) => (
-                <div
-                  key={set.id}
-                  className={cn(
-                    "grid grid-cols-[2rem_1fr_1fr_2.75rem] items-center gap-2 rounded-lg p-1",
-                    set.confirmed && "bg-primary/15",
-                  )}
-                >
-                  <span className="text-center text-base font-semibold text-muted-foreground">
-                    {set.setIndex}
-                  </span>
-                  <Input
-                    inputMode="decimal"
-                    aria-label={`${exercise.name} set ${set.setIndex} kilograms`}
-                    value={set.weight}
-                    onChange={(event) =>
-                      updateSet(exercise.id, set.id, {
-                        weight: event.target.value,
-                        reps: set.reps,
-                      })
-                    }
-                    className="h-11 text-center"
-                    disabled={draft.completed}
-                  />
-                  <Input
-                    inputMode="numeric"
-                    aria-label={`${exercise.name} set ${set.setIndex} reps`}
-                    value={set.reps}
-                    onChange={(event) =>
-                      updateSet(exercise.id, set.id, {
-                        weight: set.weight,
-                        reps: event.target.value,
-                      })
-                    }
-                    className="h-11 text-center"
-                    disabled={draft.completed}
-                  />
-                  <Button
-                    size="icon-lg"
-                    variant={set.confirmed ? "default" : "outline"}
-                    className="size-11"
-                    aria-label={
-                      set.confirmed
-                        ? `Unconfirm set ${set.setIndex}`
-                        : `Confirm set ${set.setIndex}`
-                    }
-                    disabled={!canConfirmSet(set) || draft.completed}
-                    onClick={() => confirmSet(exercise.id, set.id)}
-                  >
-                    <Check className="size-5" />
-                  </Button>
-                </div>
-              ))}
-            </CardContent>
-          </Card>
+          <WorkoutExerciseCard
+            key={exercise.id}
+            exercise={exercise}
+            completed={draft.completed}
+          />
         ))}
+
+        <Button
+          type="button"
+          variant="outline"
+          className="h-12 w-full"
+          onClick={() => setAddExerciseOpen(true)}
+        >
+          <Plus className="size-4" />
+          Add exercise
+        </Button>
       </div>
 
       <div
@@ -305,6 +260,44 @@ export function ActiveWorkout({ workoutId }: { workoutId: string }) {
           Finish Workout
         </Button>
       </div>
+
+      <Drawer
+        open={addExerciseOpen}
+        onOpenChange={setAddExerciseOpen}
+        showSwipeHandle
+      >
+        <DrawerContent>
+          <DrawerHeader className="text-left">
+            <DrawerTitle>Add exercise</DrawerTitle>
+            <DrawerDescription>
+              Add an exercise to this workout only.
+            </DrawerDescription>
+          </DrawerHeader>
+          <div className="max-h-[60dvh] space-y-2 overflow-y-auto px-4 pb-[max(1rem,env(safe-area-inset-bottom))]">
+            {(draft.exerciseCatalog ?? [])
+              .filter(
+                (item) =>
+                  !draft.exercises.some(
+                    (exercise) => exercise.exerciseId === item.exerciseId,
+                  ),
+              )
+              .map((item) => (
+                <Button
+                  key={item.exerciseId}
+                  type="button"
+                  variant="outline"
+                  className="h-12 w-full justify-start"
+                  onClick={() => {
+                    addExercise(item);
+                    setAddExerciseOpen(false);
+                  }}
+                >
+                  {item.name}
+                </Button>
+              ))}
+          </div>
+        </DrawerContent>
+      </Drawer>
     </main>
   );
 }

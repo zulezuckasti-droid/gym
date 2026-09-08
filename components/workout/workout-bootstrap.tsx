@@ -25,8 +25,9 @@ export function WorkoutBootstrap() {
 
   useEffect(() => {
     if (!hydrated) return;
-    const { queue } = useWorkoutStore.getState();
-    if (queue.length > 0) {
+    const { draft, queue } = useWorkoutStore.getState();
+    const workoutIsActive = draft !== null && !draft.completed;
+    if (queue.length > 0 && !workoutIsActive) {
       void retryQueue();
     }
   }, [hydrated, retryQueue]);
@@ -34,7 +35,14 @@ export function WorkoutBootstrap() {
   useEffect(() => {
     function maybeRetry() {
       const state = useWorkoutStore.getState();
-      if (!state.hydrated || state.queue.length === 0) return;
+      const workoutIsActive = state.draft !== null && !state.draft.completed;
+      if (
+        !state.hydrated ||
+        state.queue.length === 0 ||
+        workoutIsActive
+      ) {
+        return;
+      }
       void state.retryQueue();
     }
 

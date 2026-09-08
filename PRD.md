@@ -1,9 +1,9 @@
 # PRD - Gym Workout PWA
 
-Verzija: 1.2
+Verzija: 1.3
 Datum: 8. septembar 2026.
 Poslednji update: 8. septembar 2026.
-Status: u razvoju — faza 4 implementirana, čeka E2E na iPhoneu
+Status: u razvoju — faza 5 implementirana, čeka E2E na iPhoneu
 
 ---
 
@@ -15,8 +15,8 @@ Status: u razvoju — faza 4 implementirana, čeka E2E na iPhoneu
 
 | | |
 |---|---|
-| **Aktivna faza** | 4 — MVP workout (implementirano, čeka iPhone test) |
-| **Sledeći korak** | E2E na iPhoneu: login → start template → log set → zatvori app → nastavi draft → finish → sync → istorija |
+| **Aktivna faza** | 5 — Core UX (implementirano, čeka iPhone test) |
+| **Sledeći korak** | E2E na iPhoneu: 1 tap za isti set; potvrditi 0 mrežnih poziva tokom aktivnog treninga |
 | **Blokirano od vlasnika** | Connect GitHub (push još nije urađen) |
 
 ### Napredak po fazama
@@ -26,8 +26,8 @@ Status: u razvoju — faza 4 implementirana, čeka E2E na iPhoneu
 | 1 | Osnova | ✅ Završeno | 2026-09-08 | Dark tema, shadcn, tab bar, PWA manifest, build prolazi |
 | 2 | Baza | ✅ Završeno | 2026-09-08 | Supabase `gym` (`gabxxzxniarebovrhsjy`), 6 tabela, RLS, RPC, view, seed funkcije |
 | 3 | Auth | ✅ Završeno | 2026-09-08 | Magic link, session, zaštićene rute, logout — E2E test prošao |
-| 4 | MVP workout | ⏳ Implementirano | 2026-09-08 | Kod spreman; acceptance je E2E na iPhoneu |
-| 5 | Core UX | ⏳ Na čekanju | — | |
+| 4 | MVP workout | ✅ Završeno | 2026-09-08 | E2E na iPhoneu prošao — start, draft recovery, finish, sync, istorija |
+| 5 | Core UX | ⏳ Implementirano | 2026-09-08 | Kod i build spremni; acceptance je E2E na iPhoneu |
 | 6 | Offline | ⏳ Na čekanju | — | |
 | 7 | Sadržaj | ⏳ Na čekanju | — | |
 | 8 | Istorija | ⏳ Na čekanju | — | |
@@ -43,7 +43,7 @@ Status: u razvoju — faza 4 implementirana, čeka E2E na iPhoneu
 - [x] Placeholder stranice za sve tabove
 - [x] Minimalni PWA: `manifest.webmanifest`, `icon.tsx`, `apple-icon.tsx`
 - [x] `viewport-fit=cover`, safe-area, font 16px na inputima
-- [ ] Test na stvarnom iPhoneu (pre prelaska na fazu 4)
+- [x] Test na stvarnom iPhoneu (pre prelaska na fazu 4)
 
 **Faza 2 — Baza**
 - [x] Supabase projekat `gym` u org `Zuti`, region `eu-central-1` ($0/mesec)
@@ -81,7 +81,18 @@ Status: u razvoju — faza 4 implementirana, čeka E2E na iPhoneu
 - [x] Offline queue + retry na launch/focus/online/Settings
 - [x] Read-only `/history` i `/history/[id]`
 - [x] Build prolazi
-- [ ] E2E na iPhoneu: start → log set → zatvori app → nastavi → finish → sync → istorija
+- [x] E2E na iPhoneu: start → log set → zatvori app → nastavi → finish → sync → istorija
+
+**Faza 5 — Core UX** *(implementirano, čeka iPhone test)*
+- [x] `Previous` prikaz i prepopulacija polja (`exercise_last_performance`)
+- [x] Potvrda seta jednim tapom kada su vrednosti iste
+- [x] Custom numpad (readOnly polja, bottom sheet)
+- [x] Collapse završene vežbe u rezime
+- [x] Warmup / to failure / delete set
+- [x] `+ Add set`, `+ Add exercise`
+- [x] PR značka pored seta (bez modala)
+- [x] Build prolazi
+- [ ] E2E na iPhoneu: 1 tap za isti set; 0 mrežnih poziva tokom treninga
 
 ### Infrastruktura
 
@@ -520,8 +531,8 @@ Svaka tačka je završena tek kada acceptance kriterijum prođe. **Posle svake z
 | 1 | Osnova | ✅ | Next.js shell, Tailwind, shadcn, dark tema, tab bar, minimalni PWA manifest | Aplikacija se otvara na iPhoneu, prikazuje shell |
 | 2 | Baza | ✅ | Supabase projekat, tabele, RLS, mali seed (~15 vežbi), `finish_workout` RPC | Auth korisnik vidi samo svoje redove; RPC upisuje trening |
 | 3 | Auth | ✅ | Magic link, session, zaštićene rute, logout | Login → Home → logout → redirect na login |
-| 4 | MVP workout | ⏳ | Template kartica, aktivni trening, lokalni draft, finish, sync, read-only istorija | End-to-end tok iz sekcije 4.1 na iPhoneu — kod spreman, test na čekanju |
-| 5 | Core UX | ⏳ | Previous, prepopulacija, numpad, collapse, warmup/to failure | 1 tap za isti set; 0 mrežnih poziva tokom treninga |
+| 4 | MVP workout | ✅ | Template kartica, aktivni trening, lokalni draft, finish, sync, read-only istorija | End-to-end tok iz sekcije 4.1 na iPhoneu |
+| 5 | Core UX | ⏳ | Previous, prepopulacija, numpad, collapse, warmup/to failure | Kod spreman; čeka iPhone E2E: 1 tap za isti set, 0 mrežnih poziva tokom treninga |
 | 6 | Offline | ⏳ | Idempotentni queue, retry na launch/focus/online/manual | Finish offline → reconnect → jedan trening u bazi, bez duplikata |
 | 7 | Sadržaj | ⏳ | Biblioteka, template CRUD, Empty Workout, ad-hoc vežbe | Korisnik kreira sopstveni template |
 | 8 | Istorija | ⏳ | Read-only već postoji; dodati editovanje, promenu datuma, brisanje | Edit ne kvari PR podatke |

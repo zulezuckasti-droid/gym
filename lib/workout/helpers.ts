@@ -1,5 +1,16 @@
 import type { FinishWorkoutPayload } from "@/lib/database.types";
-import type { DraftSet, WorkoutDraft, WorkoutTemplate, WorkoutView } from "@/lib/workout/types";
+import type {
+  DraftExercise,
+  DraftSet,
+  PreviousSet,
+  WorkoutDraft,
+  WorkoutTemplate,
+  WorkoutView,
+} from "@/lib/workout/types";
+
+export function formatInputNumber(value: number | null): string {
+  return value === null ? "" : String(value);
+}
 
 export function createDraft(template: WorkoutTemplate): WorkoutDraft {
   return {
@@ -10,6 +21,7 @@ export function createDraft(template: WorkoutTemplate): WorkoutDraft {
     notes: "",
     showSummary: false,
     completed: false,
+    exerciseCatalog: template.exerciseCatalog,
     exercises: template.exercises
       .slice()
       .sort((a, b) => a.position - b.position)
@@ -18,12 +30,17 @@ export function createDraft(template: WorkoutTemplate): WorkoutDraft {
         exerciseId: exercise.exerciseId,
         name: exercise.name,
         position,
+        personalRecordWeight: exercise.personalRecordWeight,
+        collapsed: false,
         sets: Array.from({ length: exercise.targetSets }, (_, index) => ({
           id: crypto.randomUUID(),
           setIndex: index + 1,
-          weight: "",
-          reps: "",
+          weight: formatInputNumber(exercise.previousSets[index]?.weight ?? null),
+          reps: formatInputNumber(exercise.previousSets[index]?.reps ?? null),
           confirmed: false,
+          isWarmup: false,
+          toFailure: false,
+          previous: exercise.previousSets[index] ?? null,
         })),
       })),
   };
@@ -84,6 +101,8 @@ export function buildFinishPayload(draft: WorkoutDraft): FinishWorkoutPayload {
             set_index: set.setIndex,
             weight: parseWeight(set.weight),
             reps: parseReps(set.reps) ?? 0,
+            is_warmup: set.isWarmup,
+            to_failure: set.toFailure,
           })),
       }))
       .filter((exercise) => exercise.sets.length > 0),
@@ -118,10 +137,40 @@ export function draftVolume(draft: WorkoutDraft): number {
         .map((set) => ({
           weight: parseWeight(set.weight),
           reps: parseReps(set.reps) ?? 0,
-          isWarmup: false,
+          isWarmup: set.isWarmup,
         })),
     })),
   });
+}
+
+export function draftExerciseVolume(exercise: DraftExercise): number {
+  return exercise.sets.reduce((total, set) => {
+    if (!set.confirmed || set.isWarmup) return total;
+    return total + (parseWeight(set.weight) ?? 0) * (parseReps(set.reps) ?? 0);
+  }, 0);
+}
+
+export function isPersonalRecordSet(
+  exercise: DraftExercise,
+  target: DraftSet,
+): boolean {
+  if (!target.confirmed || target.isWarmup) return false;
+  const targetWeight = parseWeight(target.weight);
+  if (targetWeight === null || targetWeight <= 0) return false;
+
+  let record = exercise.personalRecordWeight ?? 0;
+  for (const set of exercise.sets) {
+    if (set.id === target.id) return targetWeight > record;
+    if (!set.confirmed || set.isWarmup) continue;
+    record = Math.max(record, parseWeight(set.weight) ?? 0);
+  }
+  return false;
+}
+
+export function formatPrevious(previous: PreviousSet | null): string {
+  if (!previous) return "—";
+  const weight = previous.weight === null ? "BW" : `${previous.weight} kg`;
+  return `${weight} × ${previous.reps}${previous.toFailure ? " †" : ""}`;
 }
 
 export function formatVolume(kg: number): string {

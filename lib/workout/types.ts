@@ -6,6 +6,21 @@ export type WorkoutTemplate = {
   id: string;
   name: string;
   exercises: TemplateExercise[];
+  exerciseCatalog: ExerciseCatalogItem[];
+};
+
+export type ExerciseCatalogItem = {
+  exerciseId: string;
+  name: string;
+  previousSets: PreviousSet[];
+  personalRecordWeight: number | null;
+};
+
+export type PreviousSet = {
+  setIndex: number;
+  weight: number | null;
+  reps: number;
+  toFailure: boolean;
 };
 
 export type TemplateExercise = {
@@ -13,6 +28,8 @@ export type TemplateExercise = {
   name: string;
   position: number;
   targetSets: number;
+  previousSets: PreviousSet[];
+  personalRecordWeight: number | null;
 };
 
 export type DraftSet = {
@@ -21,6 +38,9 @@ export type DraftSet = {
   weight: string;
   reps: string;
   confirmed: boolean;
+  isWarmup: boolean;
+  toFailure: boolean;
+  previous: PreviousSet | null;
 };
 
 export type DraftExercise = {
@@ -28,6 +48,8 @@ export type DraftExercise = {
   exerciseId: string;
   name: string;
   position: number;
+  personalRecordWeight: number | null;
+  collapsed: boolean;
   sets: DraftSet[];
 };
 
@@ -38,6 +60,7 @@ export type WorkoutDraft = {
   startedAt: string;
   notes: string;
   exercises: DraftExercise[];
+  exerciseCatalog: ExerciseCatalogItem[];
   showSummary: boolean;
   completed: boolean;
 };

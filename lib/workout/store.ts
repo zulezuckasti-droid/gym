@@ -13,6 +13,7 @@ import {
 } from "@/lib/workout/helpers";
 import type {
   DraftSet,
+  ExerciseCatalogItem,
   QueuedWorkout,
   SyncStatus,
   WorkoutDraft,
@@ -33,6 +34,15 @@ type WorkoutState = {
     patch: Pick<DraftSet, "weight" | "reps">,
   ) => void;
   confirmSet: (exerciseId: string, setId: string) => void;
+  toggleSetFlag: (
+    exerciseId: string,
+    setId: string,
+    flag: "isWarmup" | "toFailure",
+  ) => void;
+  deleteSet: (exerciseId: string, setId: string) => void;
+  addSet: (exerciseId: string) => void;
+  addExercise: (exercise: ExerciseCatalogItem) => void;
+  toggleExerciseCollapsed: (exerciseId: string) => void;
   setNotes: (notes: string) => void;
   openSummary: () => void;
   closeSummary: () => void;
@@ -117,16 +127,14 @@ export const useWorkoutStore = create<WorkoutState>()(
 
               const nextConfirmed = !target.confirmed;
 
-              return {
-                ...exercise,
-                sets: exercise.sets.map((current, index, sets) => {
+              const nextSets = exercise.sets.map(
+                (current, index, sets) => {
                   if (current.id === setId) {
                     return { ...current, confirmed: nextConfirmed };
                   }
 
                   if (
                     nextConfirmed &&
-                    current.id === sets[index]?.id &&
                     !current.confirmed &&
                     !current.weight &&
                     !current.reps
@@ -142,9 +150,155 @@ export const useWorkoutStore = create<WorkoutState>()(
                   }
 
                   return current;
-                }),
+                },
+              );
+
+              return {
+                ...exercise,
+                sets: nextSets,
+                collapsed:
+                  nextConfirmed && nextSets.every((current) => current.confirmed),
               };
             }),
+          },
+        });
+      },
+
+      toggleSetFlag: (exerciseId, setId, flag) => {
+        const draft = get().draft;
+        if (!draft || draft.completed) return;
+        set({
+          draft: {
+            ...draft,
+            exercises: draft.exercises.map((exercise) =>
+              exercise.id === exerciseId
+                ? {
+                    ...exercise,
+                    sets: exercise.sets.map((current) =>
+                      current.id === setId
+                        ? { ...current, [flag]: !current[flag] }
+                        : current,
+                    ),
+                  }
+                : exercise,
+            ),
+          },
+        });
+      },
+
+      deleteSet: (exerciseId, setId) => {
+        const draft = get().draft;
+        if (!draft || draft.completed) return;
+        set({
+          draft: {
+            ...draft,
+            exercises: draft.exercises.map((exercise) => {
+              if (exercise.id !== exerciseId || exercise.sets.length <= 1) {
+                return exercise;
+              }
+              return {
+                ...exercise,
+                collapsed: false,
+                sets: exercise.sets
+                  .filter((current) => current.id !== setId)
+                  .map((current, index) => ({
+                    ...current,
+                    setIndex: index + 1,
+                  })),
+              };
+            }),
+          },
+        });
+      },
+
+      addSet: (exerciseId) => {
+        const draft = get().draft;
+        if (!draft || draft.completed) return;
+        set({
+          draft: {
+            ...draft,
+            exercises: draft.exercises.map((exercise) => {
+              if (exercise.id !== exerciseId) return exercise;
+              const previous = exercise.sets.at(-1);
+              return {
+                ...exercise,
+                collapsed: false,
+                sets: [
+                  ...exercise.sets,
+                  {
+                    id: crypto.randomUUID(),
+                    setIndex: exercise.sets.length + 1,
+                    weight: previous?.weight ?? "",
+                    reps: previous?.reps ?? "",
+                    confirmed: false,
+                    isWarmup: false,
+                    toFailure: false,
+                    previous: null,
+                  },
+                ],
+              };
+            }),
+          },
+        });
+      },
+
+      addExercise: (catalogExercise) => {
+        const draft = get().draft;
+        if (
+          !draft ||
+          draft.completed ||
+          draft.exercises.some(
+            (exercise) => exercise.exerciseId === catalogExercise.exerciseId,
+          )
+        ) {
+          return;
+        }
+
+        set({
+          draft: {
+            ...draft,
+            exercises: [
+              ...draft.exercises,
+              {
+                id: crypto.randomUUID(),
+                exerciseId: catalogExercise.exerciseId,
+                name: catalogExercise.name,
+                position: draft.exercises.length,
+                personalRecordWeight: catalogExercise.personalRecordWeight,
+                collapsed: false,
+                sets: Array.from({ length: 3 }, (_, index) => {
+                  const previous = catalogExercise.previousSets[index] ?? null;
+                  return {
+                    id: crypto.randomUUID(),
+                    setIndex: index + 1,
+                    weight:
+                      previous?.weight === null || previous === null
+                        ? ""
+                        : String(previous.weight),
+                    reps: previous === null ? "" : String(previous.reps),
+                    confirmed: false,
+                    isWarmup: false,
+                    toFailure: false,
+                    previous,
+                  };
+                }),
+              },
+            ],
+          },
+        });
+      },
+
+      toggleExerciseCollapsed: (exerciseId) => {
+        const draft = get().draft;
+        if (!draft) return;
+        set({
+          draft: {
+            ...draft,
+            exercises: draft.exercises.map((exercise) =>
+              exercise.id === exerciseId
+                ? { ...exercise, collapsed: !exercise.collapsed }
+                : exercise,
+            ),
           },
         });
       },
