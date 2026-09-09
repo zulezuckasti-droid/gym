@@ -86,11 +86,13 @@
 
 html {
   color-scheme: dark;
+  overscroll-behavior: none;
 }
 
 body {
   font-family: var(--font-geist-sans), system-ui, sans-serif;
   -webkit-tap-highlight-color: transparent;
+  overscroll-behavior: none;
 }
 
 input,

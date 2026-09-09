@@ -3,14 +3,17 @@
 import { del, get, set as idbSet } from "idb-keyval";
 import { create } from "zustand";
 import { createJSONStorage, persist } from "zustand/middleware";
+import { asExerciseType } from "@/lib/content/constants";
 import { createClient } from "@/lib/supabase/client";
 import type { Json } from "@/lib/database.types";
+import { vibrateConfirm } from "@/lib/workout/haptics";
 import {
   buildFinishPayload,
   canConfirmSet,
   createDraft,
   createEmptyDraft,
   namesFromDraft,
+  typesFromDraft,
 } from "@/lib/workout/helpers";
 import type {
   DraftSet,
@@ -166,9 +169,15 @@ export const useWorkoutStore = create<WorkoutState>()(
               if (exercise.id !== exerciseId) return exercise;
 
               const target = exercise.sets.find((item) => item.id === setId);
-              if (!target || !canConfirmSet(target)) return exercise;
+              if (
+                !target ||
+                !canConfirmSet(target, asExerciseType(exercise.type))
+              ) {
+                return exercise;
+              }
 
               const nextConfirmed = !target.confirmed;
+              if (nextConfirmed) vibrateConfirm();
 
               const nextSets = exercise.sets.map(
                 (current, index, sets) => {
@@ -308,7 +317,9 @@ export const useWorkoutStore = create<WorkoutState>()(
                 id: draftExerciseId,
                 exerciseId: catalogExercise.exerciseId,
                 name: catalogExercise.name,
+                type: asExerciseType(catalogExercise.type),
                 position: draft.exercises.length,
+                supersetGroup: null,
                 personalRecordWeight: catalogExercise.personalRecordWeight,
                 collapsed: false,
                 isAdhoc: draft.templateId !== null,
@@ -398,6 +409,7 @@ export const useWorkoutStore = create<WorkoutState>()(
         const queued: QueuedWorkout = existing ?? {
           payload: buildFinishPayload(draft),
           exerciseNames: namesFromDraft(draft),
+          exerciseTypes: typesFromDraft(draft),
         };
 
         set({

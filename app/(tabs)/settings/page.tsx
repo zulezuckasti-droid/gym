@@ -1,5 +1,7 @@
 import Link from "next/link";
 import { LogoutButton } from "@/components/auth/logout-button";
+import { ExportDataButton } from "@/components/settings/export-data-button";
+import { PinSettings } from "@/components/settings/pin-settings";
 import { SyncStatus } from "@/components/settings/sync-status";
 import { createClient } from "@/lib/supabase/server";
 
@@ -9,10 +11,10 @@ export default async function SettingsPage() {
   const email = data?.claims?.email as string | undefined;
 
   return (
-    <main className="mx-auto flex w-full max-w-lg flex-1 flex-col px-4 pt-6">
+    <main className="mx-auto flex w-full max-w-lg flex-1 flex-col px-4 pt-6 pb-8">
       <h1 className="text-2xl font-semibold tracking-tight">Settings</h1>
 
-      <section className="mt-8 space-y-4">
+      <section className="mt-8 space-y-8">
         <div>
           <p className="text-sm text-muted-foreground">Content</p>
           <div className="mt-2 flex flex-col gap-2">
@@ -28,6 +30,15 @@ export default async function SettingsPage() {
             >
               Exercise library
             </Link>
+          </div>
+        </div>
+
+        <PinSettings />
+
+        <div>
+          <p className="text-sm text-muted-foreground">Data</p>
+          <div className="mt-2">
+            <ExportDataButton />
           </div>
         </div>
 

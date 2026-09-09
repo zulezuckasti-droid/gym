@@ -16,9 +16,16 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { createExercise } from "@/lib/content/actions";
-import { MUSCLE_GROUPS } from "@/lib/content/constants";
+import {
+  asExerciseType,
+  EXERCISE_TYPES,
+  exerciseTypeLabel,
+  MUSCLE_GROUPS,
+  type ExerciseType,
+} from "@/lib/content/constants";
 import type { ExerciseRow } from "@/lib/content/queries";
 import { groupExercisesByMuscle } from "@/lib/content/grouping";
+import { commitIme, formText, nameFieldProps } from "@/lib/form/live-text";
 
 export function ExercisesScreen({
   exercises,
@@ -30,8 +37,9 @@ export function ExercisesScreen({
   const router = useRouter();
   const [query, setQuery] = useState("");
   const [createOpen, setCreateOpen] = useState(false);
-  const [name, setName] = useState("");
+  const [formKey, setFormKey] = useState(0);
   const [muscleGroup, setMuscleGroup] = useState<string>(MUSCLE_GROUPS[0]);
+  const [exerciseType, setExerciseType] = useState<ExerciseType>("weight_reps");
   const [formError, setFormError] = useState<string | null>(null);
   const [pending, startTransition] = useTransition();
 
@@ -50,24 +58,39 @@ export function ExercisesScreen({
     [filtered],
   );
 
-  function handleCreate() {
+  function resetCreateForm() {
+    setMuscleGroup(MUSCLE_GROUPS[0]);
+    setExerciseType("weight_reps");
     setFormError(null);
+    setFormKey((key) => key + 1);
+  }
+
+  function handleCreate(form: HTMLFormElement) {
+    commitIme();
+    const submittedName = formText(form, "name").trim();
+    const submittedGroup =
+      formText(form, "muscleGroup") || muscleGroup;
+    const submittedType = asExerciseType(
+      formText(form, "exerciseType") || exerciseType,
+    );
+    setFormError(null);
+    if (!submittedName) {
+      setFormError("Exercise name is required.");
+      return;
+    }
     startTransition(async () => {
       const result = await createExercise(
-        name,
-        muscleGroup as (typeof MUSCLE_GROUPS)[number],
+        submittedName,
+        submittedGroup as (typeof MUSCLE_GROUPS)[number],
+        submittedType,
       );
       if (result.error) {
         setFormError(result.error);
         return;
       }
       setCreateOpen(false);
-      setName("");
-      if (result.id) {
-        router.push(`/exercises/${result.id}`);
-      } else {
-        router.refresh();
-      }
+      resetCreateForm();
+      router.refresh();
     });
   }
 
@@ -79,7 +102,10 @@ export function ExercisesScreen({
           type="button"
           variant="outline"
           className="h-11"
-          onClick={() => setCreateOpen(true)}
+          onClick={() => {
+            resetCreateForm();
+            setCreateOpen(true);
+          }}
         >
           <Plus className="size-4" />
           Add
@@ -117,9 +143,14 @@ export function ExercisesScreen({
                     <CardContent className="p-0">
                       <Link
                         href={`/exercises/${exercise.id}`}
-                        className="flex min-h-14 w-full items-center px-4 text-base font-medium"
+                        className="flex min-h-14 w-full items-center justify-between gap-3 px-4 text-base font-medium"
                       >
-                        {exercise.name}
+                        <span className="truncate">{exercise.name}</span>
+                        {asExerciseType(exercise.type) === "bodyweight" ? (
+                          <span className="shrink-0 text-xs font-normal text-muted-foreground">
+                            BW
+                          </span>
+                        ) : null}
                       </Link>
                     </CardContent>
                   </Card>
@@ -130,26 +161,44 @@ export function ExercisesScreen({
         )}
       </div>
 
-      <Dialog open={createOpen} onOpenChange={setCreateOpen}>
+      <Dialog
+        open={createOpen}
+        onOpenChange={(open) => {
+          if (open && !createOpen) {
+            resetCreateForm();
+          }
+          setCreateOpen(open);
+        }}
+      >
         <DialogContent>
-          <DialogHeader>
-            <DialogTitle>New exercise</DialogTitle>
-          </DialogHeader>
-          <div className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="exercise-name">Name</Label>
-              <Input
-                id="exercise-name"
-                value={name}
-                onChange={(event) => setName(event.target.value)}
-                placeholder="Exercise name"
-                className="h-11"
-              />
-            </div>
+          <form
+            key={formKey}
+            onSubmit={(event) => {
+              event.preventDefault();
+              handleCreate(event.currentTarget);
+            }}
+          >
+            <DialogHeader>
+              <DialogTitle>New exercise</DialogTitle>
+            </DialogHeader>
+            <div className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="exercise-name">Name</Label>
+                <Input
+                  id="exercise-name"
+                  name="name"
+                  defaultValue=""
+                  placeholder="Exercise name"
+                  className="h-11"
+                  autoFocus
+                  {...nameFieldProps}
+                />
+              </div>
             <div className="space-y-2">
               <Label htmlFor="muscle-group">Muscle group</Label>
               <select
                 id="muscle-group"
+                name="muscleGroup"
                 value={muscleGroup}
                 onChange={(event) => setMuscleGroup(event.target.value)}
                 className="flex h-11 w-full rounded-md border border-input bg-background px-3 text-base"
@@ -161,21 +210,40 @@ export function ExercisesScreen({
                 ))}
               </select>
             </div>
+            <div className="space-y-2">
+              <Label htmlFor="exercise-type">Type</Label>
+              <select
+                id="exercise-type"
+                name="exerciseType"
+                value={exerciseType}
+                onChange={(event) =>
+                  setExerciseType(asExerciseType(event.target.value))
+                }
+                className="flex h-11 w-full rounded-md border border-input bg-background px-3 text-base"
+              >
+                {EXERCISE_TYPES.map((type) => (
+                  <option key={type} value={type}>
+                    {exerciseTypeLabel(type)}
+                  </option>
+                ))}
+              </select>
+            </div>
             {formError ? (
               <p className="text-sm text-destructive" role="alert">
                 {formError}
               </p>
             ) : null}
-          </div>
-          <DialogFooter className="flex-col sm:flex-col">
-            <Button
-              className="h-11 w-full"
-              disabled={pending || !name.trim()}
-              onClick={handleCreate}
-            >
-              {pending ? "Creating…" : "Create exercise"}
-            </Button>
-          </DialogFooter>
+            </div>
+            <DialogFooter className="flex-col sm:flex-col">
+              <Button
+                type="submit"
+                className="h-11 w-full"
+                disabled={pending}
+              >
+                {pending ? "Creating…" : "Create exercise"}
+              </Button>
+            </DialogFooter>
+          </form>
         </DialogContent>
       </Dialog>
     </main>

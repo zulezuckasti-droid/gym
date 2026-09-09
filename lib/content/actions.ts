@@ -2,7 +2,11 @@
 
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
-import type { MuscleGroup } from "@/lib/content/constants";
+import {
+  asExerciseType,
+  type ExerciseType,
+  type MuscleGroup,
+} from "@/lib/content/constants";
 
 type ActionResult = { error: string | null };
 
@@ -15,6 +19,7 @@ async function getUserId(): Promise<string | null> {
 export async function createExercise(
   name: string,
   muscleGroup: MuscleGroup,
+  type: ExerciseType = "weight_reps",
 ): Promise<ActionResult & { id?: string }> {
   const trimmed = name.trim();
   if (!trimmed) {
@@ -33,7 +38,7 @@ export async function createExercise(
       user_id: userId,
       name: trimmed,
       muscle_group: muscleGroup,
-      type: "weight_reps",
+      type: asExerciseType(type),
       is_custom: true,
     })
     .select("id")
@@ -89,6 +94,26 @@ export async function archiveExercise(id: string): Promise<ActionResult> {
   revalidatePath("/");
   revalidatePath("/templates");
   revalidatePath("/progress");
+  return { error: null };
+}
+
+export async function updateExerciseType(
+  id: string,
+  type: ExerciseType,
+): Promise<ActionResult> {
+  const supabase = await createClient();
+  const { error } = await supabase
+    .from("exercises")
+    .update({ type: asExerciseType(type) })
+    .eq("id", id);
+
+  if (error) {
+    return { error: error.message };
+  }
+
+  revalidatePath("/exercises");
+  revalidatePath(`/exercises/${id}`);
+  revalidatePath("/");
   return { error: null };
 }
 
@@ -227,6 +252,21 @@ export async function removeExerciseFromTemplate(
   templateId: string,
 ): Promise<ActionResult> {
   const supabase = await createClient();
+
+  const { data: row } = await supabase
+    .from("template_exercises")
+    .select("superset_group")
+    .eq("id", templateExerciseId)
+    .maybeSingle();
+
+  if (row?.superset_group != null) {
+    await supabase
+      .from("template_exercises")
+      .update({ superset_group: null })
+      .eq("template_id", templateId)
+      .eq("superset_group", row.superset_group);
+  }
+
   const { error } = await supabase
     .from("template_exercises")
     .delete()
@@ -273,6 +313,110 @@ export async function updateTemplateExerciseSets(
   }
 
   revalidatePath(`/templates/${templateId}`);
+  revalidatePath("/");
+  return { error: null };
+}
+
+export async function pairTemplateExercises(
+  templateId: string,
+  firstId: string,
+  secondId: string,
+): Promise<ActionResult> {
+  const supabase = await createClient();
+  const { data: rows, error: loadError } = await supabase
+    .from("template_exercises")
+    .select("id, position, superset_group")
+    .eq("template_id", templateId)
+    .order("position");
+
+  if (loadError) {
+    return { error: loadError.message };
+  }
+
+  const first = rows?.find((row) => row.id === firstId);
+  const second = rows?.find((row) => row.id === secondId);
+  if (!first || !second) {
+    return { error: "Exercises not found in this template." };
+  }
+  if (Math.abs(first.position - second.position) !== 1) {
+    return { error: "Only adjacent exercises can form a superset." };
+  }
+  if (first.superset_group != null || second.superset_group != null) {
+    return { error: "Those exercises are already in a superset." };
+  }
+
+  const nextGroup =
+    Math.max(0, ...(rows ?? []).map((row) => row.superset_group ?? 0)) + 1;
+
+  const { error } = await supabase
+    .from("template_exercises")
+    .update({ superset_group: nextGroup })
+    .in("id", [firstId, secondId]);
+
+  if (error) {
+    return { error: error.message };
+  }
+
+  revalidatePath("/templates");
+  revalidatePath(`/templates/${templateId}`);
+  revalidatePath("/");
+  return { error: null };
+}
+
+export async function unpairTemplateSuperset(
+  templateId: string,
+  group: number,
+): Promise<ActionResult> {
+  const supabase = await createClient();
+  const { error } = await supabase
+    .from("template_exercises")
+    .update({ superset_group: null })
+    .eq("template_id", templateId)
+    .eq("superset_group", group);
+
+  if (error) {
+    return { error: error.message };
+  }
+
+  revalidatePath("/templates");
+  revalidatePath(`/templates/${templateId}`);
+  revalidatePath("/");
+  return { error: null };
+}
+
+export async function reorderTemplateExercises(
+  templateId: string,
+  orderedIds: string[],
+): Promise<ActionResult> {
+  const supabase = await createClient();
+  const { error } = await supabase.rpc("reorder_template_exercises", {
+    p_template_id: templateId,
+    p_ordered_ids: orderedIds,
+  });
+
+  if (error) {
+    return { error: error.message };
+  }
+
+  revalidatePath("/templates");
+  revalidatePath(`/templates/${templateId}`);
+  revalidatePath("/");
+  return { error: null };
+}
+
+export async function reorderTemplates(
+  orderedIds: string[],
+): Promise<ActionResult> {
+  const supabase = await createClient();
+  const { error } = await supabase.rpc("reorder_templates", {
+    p_ordered_ids: orderedIds,
+  });
+
+  if (error) {
+    return { error: error.message };
+  }
+
+  revalidatePath("/templates");
   revalidatePath("/");
   return { error: null };
 }

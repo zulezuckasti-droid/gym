@@ -279,6 +279,11 @@ export type Database = {
     };
     Functions: {
       finish_workout: { Args: { payload: Json }; Returns: Json };
+      reorder_template_exercises: {
+        Args: { p_ordered_ids: string[]; p_template_id: string };
+        Returns: undefined;
+      };
+      reorder_templates: { Args: { p_ordered_ids: string[] }; Returns: undefined };
       seed_default_exercises: { Args: never; Returns: number };
       seed_default_push_template: { Args: never; Returns: string };
       update_workout_history: { Args: { payload: Json }; Returns: Json };

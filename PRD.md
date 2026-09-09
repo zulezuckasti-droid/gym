@@ -1,9 +1,9 @@
 # PRD - Gym Workout PWA
 
-Verzija: 1.8
+Verzija: 1.9
 Datum: 8. septembar 2026.
 Poslednji update: 9. septembar 2026.
-Status: u razvoju — faza 9 završena, sledeća faza 10 (Završnica)
+Status: u razvoju — faza 10 kod spreman, čeka iPhone E2E i Vercel
 
 ---
 
@@ -16,8 +16,8 @@ Status: u razvoju — faza 9 završena, sledeća faza 10 (Završnica)
 | | |
 |---|---|
 | **Aktivna faza** | 10 — Završnica |
-| **Sledeći korak** | Superseti, bodyweight, dnd-kit, PIN, wake lock, export, Serwist, Vercel |
-| **Blokirano od vlasnika** | Connect GitHub (push još nije urađen) |
+| **Sledeći korak** | iPhone E2E, zatim Connect GitHub i Connect Vercel |
+| **Blokirano od vlasnika** | Connect GitHub (push još nije urađen); Connect Vercel |
 
 ### Napredak po fazama
 
@@ -32,7 +32,7 @@ Status: u razvoju — faza 9 završena, sledeća faza 10 (Završnica)
 | 7 | Sadržaj | ✅ Završeno | 2026-09-09 | iPhone E2E prošao; ispravljeno čuvanje neizmenjenog imena templatea |
 | 8 | Istorija | ✅ Završeno | 2026-09-09 | iPhone E2E prošao — edit setova/datuma, add/delete set, brisanje treninga |
 | 9 | Progres | ✅ Završeno | 2026-09-09 | PR view, Recharts, stranica vežbe — iPhone E2E prošao |
-| 10 | Završnica | ⏳ Na čekanju | — | |
+| 10 | Završnica | 🔄 Kod spreman | 2026-09-09 | Čeka iPhone E2E i Vercel |
 
 ### Detalji završenih faza
 
@@ -118,6 +118,7 @@ Status: u razvoju — faza 9 završena, sledeća faza 10 (Završnica)
 - [x] E2E na iPhoneu: korisnik kreira sopstveni template i vežbe bez hardkodovanih podataka
 - [x] Ispravljen `Save` za novo ime templatea bez potrebe za dodatnom izmenom
 - [x] Pretraga pri dodavanju vežbe u template
+- [x] Ispravljeno čuvanje imena nove vežbe (npr. `zgib`) bez dodatnog slova — uncontrolled polje + čitanje iz DOM-a
 
 **Faza 8 — Istorija**
 - [x] Editovanje kilaže i ponavljanja postojećih setova
@@ -141,15 +142,29 @@ Status: u razvoju — faza 9 završena, sledeća faza 10 (Završnica)
 - [x] Lint i production build prolaze
 - [x] iPhone E2E — grafikoni odražavaju stvarne podatke
 
+**Faza 10 — Završnica**
+- [x] Superset grupe u template editoru i na aktivnom treningu (A1/A2, naizmenični redovi)
+- [x] Bodyweight tip vežbe (samo reps + opciona dodatna kilaža); seed backfill
+- [x] Drag-and-drop redosled templatea i vežbi (`dnd-kit`); RPC `reorder_templates` / `reorder_template_exercises`
+- [x] PIN lock ekran (4 cifre, hash u `localStorage`) i `Remember PIN for 7 days`
+- [x] Screen Wake Lock tokom aktivnog treninga; vibracija na potvrdu seta gde je podržana
+- [x] `Export JSON` u Settings
+- [x] Serwist service worker (`@serwist/turbopack`), app shell cache, `/offline`
+- [x] Ikonice 192/512 i `apple-touch-icon`; `overscroll-behavior: none`
+- [x] Lint i production build prolaze
+- [ ] iPhone E2E — puna specifikacija
+- [ ] Vercel deploy (Connect Vercel od vlasnika)
+- [ ] GitHub push (Connect GitHub od vlasnika)
+
 ### Infrastruktura
 
 | Stavka | Status |
 |--------|--------|
 | Supabase projekat | ✅ `gabxxzxniarebovrhsjy` |
-| Lokalne migracije | ✅ 8 fajlova |
+| Lokalne migracije | ✅ 9 fajlova |
 | Env varijable | ✅ `.env.local` |
 | GitHub repo `gym` | ⏳ Nije kreiran |
-| Vercel deploy | ⏳ Faza 10 |
+| Vercel deploy | ⏳ Čeka Connect Vercel |
 
 ---
 
@@ -584,7 +599,7 @@ Svaka tačka je završena tek kada acceptance kriterijum prođe. **Posle svake z
 | 7 | Sadržaj | ✅ | Biblioteka, template CRUD, Empty Workout, ad-hoc vežbe | Korisnik kreira sopstveni template — iPhone E2E prošao |
 | 8 | Istorija | ✅ | Read-only već postoji; dodati editovanje, promenu datuma, brisanje | Edit ne kvari PR podatke — iPhone E2E prošao |
 | 9 | Progres | ✅ | PR, stranica vežbe, grafikoni (Recharts) | Grafikoni odražavaju stvarne podatke — iPhone E2E prošao |
-| 10 | Završnica | ⏳ | Superseti, bodyweight, dnd-kit, PIN, wake lock, export, Serwist, Vercel | Puna specifikacija funkcionalna na iPhoneu |
+| 10 | Završnica | 🔄 Kod spreman | Superseti, bodyweight, dnd-kit, PIN, wake lock, export, Serwist, Vercel | Puna specifikacija funkcionalna na iPhoneu |
 
 **Pravila protiv preopterećenja:**
 - Jedna vertikalna celina po iteraciji.

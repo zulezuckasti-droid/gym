@@ -1,10 +1,15 @@
 import type { FinishWorkoutPayload } from "@/lib/database.types";
-import { EMPTY_WORKOUT_NAME } from "@/lib/content/constants";
+import {
+  asExerciseType,
+  EMPTY_WORKOUT_NAME,
+  type ExerciseType,
+} from "@/lib/content/constants";
 import type {
   DraftExercise,
   DraftSet,
   ExerciseCatalogItem,
   PreviousSet,
+  QueuedWorkout,
   WorkoutDraft,
   WorkoutTemplate,
   WorkoutView,
@@ -31,7 +36,9 @@ export function createDraft(template: WorkoutTemplate): WorkoutDraft {
         id: crypto.randomUUID(),
         exerciseId: exercise.exerciseId,
         name: exercise.name,
+        type: asExerciseType(exercise.type),
         position,
+        supersetGroup: exercise.supersetGroup ?? null,
         personalRecordWeight: exercise.personalRecordWeight,
         collapsed: false,
         isAdhoc: false,
@@ -79,8 +86,15 @@ export function parseReps(value: string): number | null {
   return Number.isInteger(parsed) && parsed >= 0 ? parsed : null;
 }
 
-export function canConfirmSet(set: DraftSet): boolean {
-  return parseWeight(set.weight) !== null && parseReps(set.reps) !== null;
+export function canConfirmSet(
+  set: DraftSet,
+  type: ExerciseType = "weight_reps",
+): boolean {
+  if (parseReps(set.reps) === null) return false;
+  if (type === "bodyweight") {
+    return set.weight.trim() === "" || parseWeight(set.weight) !== null;
+  }
+  return parseWeight(set.weight) !== null;
 }
 
 export function draftHasConfirmedSet(draft: WorkoutDraft): boolean {
@@ -113,6 +127,7 @@ export function buildFinishPayload(draft: WorkoutDraft): FinishWorkoutPayload {
         id: exercise.id,
         exercise_id: exercise.exerciseId,
         position: exercise.position,
+        superset_group: exercise.supersetGroup ?? null,
         is_adhoc: exercise.isAdhoc,
         sets: exercise.sets
           .filter((set) => set.confirmed)
@@ -213,10 +228,26 @@ export function newPersonalRecords(draft: WorkoutDraft): NewPersonalRecord[] {
   return [...records.values()];
 }
 
-export function formatPrevious(previous: PreviousSet | null): string {
+export function formatSetLoad(
+  weight: number | null,
+  reps: number,
+  type: ExerciseType = "weight_reps",
+): string {
+  if (type === "bodyweight") {
+    const load = weight === null ? "BW" : `+${weight} kg`;
+    return `${load} × ${reps}`;
+  }
+  return `${weight ?? 0} kg × ${reps}`;
+}
+
+export function formatPrevious(
+  previous: PreviousSet | null,
+  type: ExerciseType = "weight_reps",
+): string {
   if (!previous) return "—";
-  const weight = previous.weight === null ? "BW" : `${previous.weight} kg`;
-  return `${weight} × ${previous.reps}${previous.toFailure ? " †" : ""}`;
+  return `${formatSetLoad(previous.weight, previous.reps, type)}${
+    previous.toFailure ? " †" : ""
+  }`;
 }
 
 export function formatVolume(kg: number): string {
@@ -253,11 +284,8 @@ export function formatDate(value: string): string {
   }).format(date);
 }
 
-export function queuedToView(item: {
-  payload: FinishWorkoutPayload;
-  exerciseNames: Record<string, string>;
-}): WorkoutView {
-  const { payload, exerciseNames } = item;
+export function queuedToView(item: QueuedWorkout): WorkoutView {
+  const { payload, exerciseNames, exerciseTypes } = item;
   return {
     id: payload.workout.id,
     name: payload.workout.name,
@@ -270,7 +298,9 @@ export function queuedToView(item: {
       id: exercise.id,
       exerciseId: exercise.exercise_id,
       name: exerciseNames[exercise.id] ?? "Exercise",
+      type: asExerciseType(exerciseTypes?.[exercise.id]),
       position: exercise.position,
+      supersetGroup: exercise.superset_group ?? null,
       sets: exercise.sets.map((set) => ({
         id: set.id,
         setIndex: set.set_index,
@@ -286,5 +316,16 @@ export function queuedToView(item: {
 export function namesFromDraft(draft: WorkoutDraft): Record<string, string> {
   return Object.fromEntries(
     draft.exercises.map((exercise) => [exercise.id, exercise.name]),
+  );
+}
+
+export function typesFromDraft(
+  draft: WorkoutDraft,
+): Record<string, ExerciseType> {
+  return Object.fromEntries(
+    draft.exercises.map((exercise) => [
+      exercise.id,
+      asExerciseType(exercise.type),
+    ]),
   );
 }

@@ -4,6 +4,7 @@ export type ExerciseListItem = {
   id: string;
   name: string;
   muscle_group: string;
+  type?: string;
 };
 
 export function groupExercisesByMuscle(

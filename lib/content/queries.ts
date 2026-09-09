@@ -20,8 +20,10 @@ export type TemplateExerciseRow = {
   id: string;
   exerciseId: string;
   name: string;
+  type: string;
   position: number;
   targetSets: number;
+  supersetGroup: number | null;
 };
 
 export type TemplateDetail = {
@@ -128,7 +130,8 @@ export async function getTemplateById(
         exercise_id,
         position,
         target_sets,
-        exercises ( name )
+        superset_group,
+        exercises ( name, type )
       )
     `,
     )
@@ -150,8 +153,10 @@ export async function getTemplateById(
       id: item.id,
       exerciseId: item.exercise_id,
       name: item.exercises?.name ?? "Exercise",
+      type: item.exercises?.type ?? "weight_reps",
       position: item.position,
       targetSets: item.target_sets,
+      supersetGroup: item.superset_group ?? null,
     }));
 
   return {

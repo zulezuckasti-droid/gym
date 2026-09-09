@@ -1,3 +1,4 @@
+import type { ExerciseType } from "@/lib/content/constants";
 import type { FinishWorkoutPayload } from "@/lib/database.types";
 
 export type SyncStatus = "local" | "pending" | "syncing" | "synced" | "failed";
@@ -12,6 +13,7 @@ export type WorkoutTemplate = {
 export type ExerciseCatalogItem = {
   exerciseId: string;
   name: string;
+  type: ExerciseType;
   previousSets: PreviousSet[];
   personalRecordWeight: number | null;
 };
@@ -26,8 +28,10 @@ export type PreviousSet = {
 export type TemplateExercise = {
   exerciseId: string;
   name: string;
+  type: ExerciseType;
   position: number;
   targetSets: number;
+  supersetGroup: number | null;
   previousSets: PreviousSet[];
   personalRecordWeight: number | null;
 };
@@ -47,7 +51,9 @@ export type DraftExercise = {
   id: string;
   exerciseId: string;
   name: string;
+  type: ExerciseType;
   position: number;
+  supersetGroup: number | null;
   personalRecordWeight: number | null;
   collapsed: boolean;
   isAdhoc: boolean;
@@ -66,6 +72,23 @@ export type WorkoutDraft = {
   completed: boolean;
 };
 
+export type WorkoutViewExercise = {
+  id: string;
+  exerciseId: string;
+  name: string;
+  type: ExerciseType;
+  position: number;
+  supersetGroup: number | null;
+  sets: Array<{
+    id: string;
+    setIndex: number;
+    weight: number | null;
+    reps: number;
+    isWarmup: boolean;
+    toFailure: boolean;
+  }>;
+};
+
 export type WorkoutView = {
   id: string;
   name: string;
@@ -74,25 +97,13 @@ export type WorkoutView = {
   startedAt: string;
   finishedAt: string;
   pending: boolean;
-  exercises: Array<{
-    id: string;
-    exerciseId: string;
-    name: string;
-    position: number;
-    sets: Array<{
-      id: string;
-      setIndex: number;
-      weight: number | null;
-      reps: number;
-      isWarmup: boolean;
-      toFailure: boolean;
-    }>;
-  }>;
+  exercises: WorkoutViewExercise[];
 };
 
 export type QueuedWorkout = {
   payload: FinishWorkoutPayload;
   exerciseNames: Record<string, string>;
+  exerciseTypes?: Record<string, ExerciseType>;
 };
 
-export type { FinishWorkoutPayload };
+export type { ExerciseType, FinishWorkoutPayload };

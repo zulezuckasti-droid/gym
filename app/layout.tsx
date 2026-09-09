@@ -1,6 +1,9 @@
 import type { Metadata, Viewport } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
+import { PinGate } from "@/components/pin/pin-gate";
+import { SerwistProvider } from "@/components/pwa/serwist-provider";
 import { WorkoutBootstrap } from "@/components/workout/workout-bootstrap";
+import { createClient } from "@/lib/supabase/server";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -34,7 +37,11 @@ export const viewport: Viewport = {
   themeColor: "#0a0a0b",
 };
 
-export default function RootLayout({ children }: LayoutProps<"/">) {
+export default async function RootLayout({ children }: LayoutProps<"/">) {
+  const supabase = await createClient();
+  const { data } = await supabase.auth.getClaims();
+  const authenticated = Boolean(data?.claims);
+
   return (
     <html
       lang="en"
@@ -45,8 +52,10 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
         className="min-h-full bg-background text-foreground"
         suppressHydrationWarning
       >
-        <WorkoutBootstrap />
-        {children}
+        <SerwistProvider swUrl="/serwist/sw.js">
+          <WorkoutBootstrap />
+          {authenticated ? <PinGate>{children}</PinGate> : children}
+        </SerwistProvider>
       </body>
     </html>
   );

@@ -11,18 +11,19 @@ import {
   DrawerHeader,
   DrawerTitle,
 } from "@/components/ui/drawer";
-import { Input } from "@/components/ui/input";
+import {
+  WorkoutSetHeader,
+  WorkoutSetRow,
+} from "@/components/workout/workout-set-row";
 import { WorkoutNumpad } from "@/components/workout/workout-numpad";
+import { asExerciseType } from "@/lib/content/constants";
 import {
   canConfirmSet,
   draftExerciseVolume,
-  formatPrevious,
   formatVolume,
-  isPersonalRecordSet,
 } from "@/lib/workout/helpers";
 import { useWorkoutStore } from "@/lib/workout/store";
 import type { DraftExercise } from "@/lib/workout/types";
-import { cn } from "@/lib/utils";
 
 type ActiveInput = {
   setId: string;
@@ -36,7 +37,6 @@ export function WorkoutExerciseCard({
   exercise: DraftExercise;
   completed: boolean;
 }) {
-  const updateSet = useWorkoutStore((state) => state.updateSet);
   const confirmSet = useWorkoutStore((state) => state.confirmSet);
   const toggleSetFlag = useWorkoutStore((state) => state.toggleSetFlag);
   const deleteSet = useWorkoutStore((state) => state.deleteSet);
@@ -44,14 +44,16 @@ export function WorkoutExerciseCard({
   const toggleCollapsed = useWorkoutStore(
     (state) => state.toggleExerciseCollapsed,
   );
+  const updateSet = useWorkoutStore((state) => state.updateSet);
   const [activeInput, setActiveInput] = useState<ActiveInput>(null);
   const [menuSetId, setMenuSetId] = useState<string | null>(null);
 
+  const type = asExerciseType(exercise.type);
   const activeSet = activeInput
-    ? exercise.sets.find((set) => set.id === activeInput.setId) ?? null
+    ? (exercise.sets.find((set) => set.id === activeInput.setId) ?? null)
     : null;
   const menuSet = menuSetId
-    ? exercise.sets.find((set) => set.id === menuSetId) ?? null
+    ? (exercise.sets.find((set) => set.id === menuSetId) ?? null)
     : null;
 
   if (exercise.collapsed) {
@@ -87,7 +89,7 @@ export function WorkoutExerciseCard({
   }
 
   function confirmFromNumpad() {
-    if (!activeSet || !canConfirmSet(activeSet)) return;
+    if (!activeSet || !canConfirmSet(activeSet, type)) return;
     if (!activeSet.confirmed) confirmSet(exercise.id, activeSet.id);
     setActiveInput(null);
   }
@@ -98,85 +100,19 @@ export function WorkoutExerciseCard({
         <CardTitle className="text-lg">{exercise.name}</CardTitle>
       </CardHeader>
       <CardContent className="space-y-2 px-2 pt-4">
-        <div className="grid grid-cols-[2.75rem_3.75rem_3.25rem_3.25rem_2.75rem] gap-1 px-0.5 text-[10px] font-medium text-muted-foreground">
-          <span>SET</span>
-          <span>PREVIOUS</span>
-          <span>KG</span>
-          <span>REPS</span>
-          <span className="sr-only">Confirm</span>
-        </div>
+        <WorkoutSetHeader
+          weightLabel={type === "bodyweight" ? "+KG" : "KG"}
+        />
 
         {exercise.sets.map((set) => (
-          <div
+          <WorkoutSetRow
             key={set.id}
-            className={cn(
-              "grid grid-cols-[2.75rem_3.75rem_3.25rem_3.25rem_2.75rem] items-center gap-1 rounded-lg p-0.5",
-              set.confirmed && "bg-primary/15",
-            )}
-          >
-            <Button
-              type="button"
-              size="icon-lg"
-              variant="ghost"
-              className="relative size-11 text-base font-semibold"
-              disabled={completed}
-              aria-label={`Options for set ${set.setIndex}`}
-              onClick={() => setMenuSetId(set.id)}
-            >
-              {set.setIndex}
-              {set.isWarmup || set.toFailure ? (
-                <span className="absolute right-0.5 bottom-0.5 text-[9px] leading-none text-primary">
-                  {set.isWarmup ? "W" : ""}
-                  {set.toFailure ? "F" : ""}
-                </span>
-              ) : null}
-            </Button>
-
-            <span className="truncate text-[10px] leading-tight text-muted-foreground">
-              {formatPrevious(set.previous ?? null)}
-            </span>
-
-            <Input
-              readOnly
-              aria-label={`${exercise.name} set ${set.setIndex} kilograms`}
-              value={set.weight}
-              className="h-11 px-1 text-center"
-              disabled={completed}
-              onClick={() =>
-                setActiveInput({ setId: set.id, field: "weight" })
-              }
-            />
-            <Input
-              readOnly
-              aria-label={`${exercise.name} set ${set.setIndex} reps`}
-              value={set.reps}
-              className="h-11 px-1 text-center"
-              disabled={completed}
-              onClick={() => setActiveInput({ setId: set.id, field: "reps" })}
-            />
-            <div className="relative">
-              <Button
-                type="button"
-                size="icon-lg"
-                variant={set.confirmed ? "default" : "outline"}
-                className="size-11"
-                aria-label={
-                  set.confirmed
-                    ? `Unconfirm set ${set.setIndex}`
-                    : `Confirm set ${set.setIndex}`
-                }
-                disabled={!canConfirmSet(set) || completed}
-                onClick={() => confirmSet(exercise.id, set.id)}
-              >
-                <Check className="size-5" />
-              </Button>
-              {isPersonalRecordSet(exercise, set) ? (
-                <span className="absolute -top-2 -right-1 rounded bg-amber-400 px-1 text-[9px] font-bold text-black">
-                  PR
-                </span>
-              ) : null}
-            </div>
-          </div>
+            exercise={exercise}
+            set={set}
+            completed={completed}
+            onOpenNumpad={(setId, field) => setActiveInput({ setId, field })}
+            onOpenMenu={setMenuSetId}
+          />
         ))}
 
         <Button
@@ -200,7 +136,8 @@ export function WorkoutExerciseCard({
             ? (activeSet?.reps ?? "")
             : (activeSet?.weight ?? "")
         }
-        canConfirm={activeSet ? canConfirmSet(activeSet) : false}
+        canConfirm={activeSet ? canConfirmSet(activeSet, type) : false}
+        weightOptional={type === "bodyweight"}
         onOpenChange={(open) => {
           if (!open) setActiveInput(null);
         }}

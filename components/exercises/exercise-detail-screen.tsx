@@ -8,7 +8,13 @@ import { Button, buttonVariants } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { ExerciseProgressSection } from "@/components/exercises/exercise-progress-section";
-import { archiveExercise, renameExercise } from "@/lib/content/actions";
+import { archiveExercise, renameExercise, updateExerciseType } from "@/lib/content/actions";
+import {
+  asExerciseType,
+  EXERCISE_TYPES,
+  exerciseTypeLabel,
+} from "@/lib/content/constants";
+import { commitIme, formText, nameFieldProps } from "@/lib/form/live-text";
 import type { ExerciseRow } from "@/lib/content/queries";
 import type { ExerciseProgressData } from "@/lib/progress/types";
 import { cn } from "@/lib/utils";
@@ -23,7 +29,6 @@ export function ExerciseDetailScreen({
   error: string | null;
 }) {
   const router = useRouter();
-  const [name, setName] = useState(exercise?.name ?? "");
   const [formError, setFormError] = useState<string | null>(null);
   const [pending, startTransition] = useTransition();
 
@@ -52,15 +57,35 @@ export function ExerciseDetailScreen({
   }
 
   const item = exercise;
+  const savedType = asExerciseType(item.type);
 
-  function handleSave() {
+  function handleSave(form: HTMLFormElement) {
+    commitIme();
+    const liveName = formText(form, "name").trim();
+    const liveType = asExerciseType(formText(form, "exerciseType"));
     setFormError(null);
+    if (!liveName) {
+      setFormError("Exercise name is required.");
+      return;
+    }
+
     startTransition(async () => {
-      const result = await renameExercise(item.id, name);
-      if (result.error) {
-        setFormError(result.error);
-        return;
+      if (liveName !== item.name) {
+        const renameResult = await renameExercise(item.id, liveName);
+        if (renameResult.error) {
+          setFormError(renameResult.error);
+          return;
+        }
       }
+
+      if (liveType !== savedType) {
+        const typeResult = await updateExerciseType(item.id, liveType);
+        if (typeResult.error) {
+          setFormError(typeResult.error);
+          return;
+        }
+      }
+
       router.refresh();
     });
   }
@@ -108,21 +133,47 @@ export function ExerciseDetailScreen({
         </p>
       ) : null}
 
-      <div className="mt-8 space-y-4">
+      <form
+        key={item.id}
+        className="mt-8 flex flex-1 flex-col"
+        onSubmit={(event) => {
+          event.preventDefault();
+          handleSave(event.currentTarget);
+        }}
+      >
+      <div className="space-y-4">
         <h2 className="text-sm font-medium text-muted-foreground">Manage</h2>
         <div className="space-y-2">
           <Label htmlFor="name">Name</Label>
           <Input
             id="name"
-            value={name}
-            onChange={(event) => setName(event.target.value)}
+            name="name"
+            key={item.id}
+            defaultValue={item.name}
             className="h-11"
+            {...nameFieldProps}
           />
         </div>
 
         <div className="space-y-1">
           <p className="text-sm text-muted-foreground">Muscle group</p>
           <p className="text-sm font-medium">{item.muscle_group}</p>
+        </div>
+
+        <div className="space-y-2">
+          <Label htmlFor="exercise-type">Type</Label>
+          <select
+            id="exercise-type"
+            name="exerciseType"
+            defaultValue={savedType}
+            className="flex h-11 w-full rounded-md border border-input bg-background px-3 text-base"
+          >
+            {EXERCISE_TYPES.map((type) => (
+              <option key={type} value={type}>
+                {exerciseTypeLabel(type)}
+              </option>
+            ))}
+          </select>
         </div>
 
         {formError ? (
@@ -134,13 +185,14 @@ export function ExerciseDetailScreen({
 
       <div className="mt-auto space-y-3 pt-8 pb-4">
         <Button
+          type="submit"
           className="h-11 w-full"
-          disabled={pending || !name.trim() || name.trim() === item.name}
-          onClick={handleSave}
+          disabled={pending}
         >
-          {pending ? "Saving…" : "Save name"}
+          {pending ? "Saving…" : "Save"}
         </Button>
         <Button
+          type="button"
           variant="outline"
           className="h-11 w-full text-destructive"
           disabled={pending}
@@ -149,6 +201,7 @@ export function ExerciseDetailScreen({
           Archive exercise
         </Button>
       </div>
+      </form>
     </main>
   );
 }

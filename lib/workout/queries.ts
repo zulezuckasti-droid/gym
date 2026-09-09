@@ -1,3 +1,4 @@
+import { asExerciseType } from "@/lib/content/constants";
 import { createClient } from "@/lib/supabase/server";
 import type {
   ExerciseCatalogItem,
@@ -14,7 +15,8 @@ type TemplateRow = {
     exercise_id: string;
     position: number;
     target_sets: number;
-    exercises: { name: string } | null;
+    superset_group: number | null;
+    exercises: { name: string; type: string } | null;
   }> | null;
 };
 
@@ -29,7 +31,8 @@ type WorkoutRow = {
     id: string;
     position: number;
     exercise_id: string;
-    exercises: { name: string } | null;
+    superset_group: number | null;
+    exercises: { name: string; type: string } | null;
     sets: Array<{
       id: string;
       set_index: number;
@@ -57,7 +60,8 @@ const templateSelect = `
     exercise_id,
     position,
     target_sets,
-    exercises ( name )
+    superset_group,
+    exercises ( name, type )
   )
 `;
 
@@ -72,7 +76,8 @@ const workoutSelect = `
     id,
     position,
     exercise_id,
-    exercises ( name ),
+    superset_group,
+    exercises ( name, type ),
     sets (
       id,
       set_index,
@@ -100,8 +105,10 @@ function mapTemplate(
       .map((item) => ({
         exerciseId: item.exercise_id,
         name: item.exercises?.name ?? "Exercise",
+        type: asExerciseType(item.exercises?.type),
         position: item.position,
         targetSets: item.target_sets,
+        supersetGroup: item.superset_group ?? null,
         previousSets: previousByExercise.get(item.exercise_id) ?? [],
         personalRecordWeight: prsByExercise.get(item.exercise_id) ?? null,
       })),
@@ -124,7 +131,9 @@ function mapWorkout(row: WorkoutRow, pending = false): WorkoutView {
         id: exercise.id,
         exerciseId: exercise.exercise_id,
         name: exercise.exercises?.name ?? "Exercise",
+        type: asExerciseType(exercise.exercises?.type),
         position: exercise.position,
+        supersetGroup: exercise.superset_group ?? null,
         sets: (exercise.sets ?? [])
           .slice()
           .sort((a, b) => a.set_index - b.set_index)
@@ -182,7 +191,7 @@ export async function getHomeTemplates(): Promise<{
     await Promise.all([
       supabase
         .from("exercises")
-        .select("id, name")
+        .select("id, name, type")
         .eq("is_archived", false)
         .order("name"),
       supabase
@@ -229,6 +238,7 @@ export async function getHomeTemplates(): Promise<{
   const exerciseCatalog: ExerciseCatalogItem[] = catalogRows.map((exercise) => ({
     exerciseId: exercise.id,
     name: exercise.name,
+    type: asExerciseType(exercise.type),
     previousSets: previousByExercise.get(exercise.id) ?? [],
     personalRecordWeight: prsByExercise.get(exercise.id) ?? null,
   }));

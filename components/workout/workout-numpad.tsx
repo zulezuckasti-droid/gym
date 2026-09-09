@@ -16,6 +16,7 @@ type WorkoutNumpadProps = {
   field: "weight" | "reps";
   value: string;
   canConfirm: boolean;
+  weightOptional?: boolean;
   onOpenChange: (open: boolean) => void;
   onValueChange: (value: string) => void;
   onNext: () => void;
@@ -28,6 +29,7 @@ export function WorkoutNumpad({
   field,
   value,
   canConfirm,
+  weightOptional = false,
   onOpenChange,
   onValueChange,
   onNext,
@@ -53,7 +55,11 @@ export function WorkoutNumpad({
         <DrawerHeader className="pb-3 text-left">
           <DrawerTitle>{title}</DrawerTitle>
           <DrawerDescription>
-            {field === "weight" ? "Enter kilograms" : "Enter repetitions"}
+            {field === "weight"
+              ? weightOptional
+                ? "Optional extra kilograms"
+                : "Enter kilograms"
+              : "Enter repetitions"}
           </DrawerDescription>
         </DrawerHeader>
 

@@ -23,8 +23,11 @@ import {
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { WorkoutExerciseCard } from "@/components/workout/workout-exercise-card";
+import { WorkoutSupersetCard } from "@/components/workout/workout-superset-card";
 import { addExerciseToTemplate } from "@/lib/content/actions";
 import { EMPTY_WORKOUT_NAME } from "@/lib/content/constants";
+import { useWakeLock } from "@/hooks/use-wake-lock";
+import { groupExercises } from "@/lib/workout/grouping";
 import {
   draftHasConfirmedSet,
   draftVolume,
@@ -65,6 +68,7 @@ export function ActiveWorkout({ workoutId }: { workoutId: string }) {
   const startEmptyWorkout = useWorkoutStore((state) => state.startEmptyWorkout);
   const clearDraft = useWorkoutStore((state) => state.clearDraft);
   const setPendingStart = useWorkoutStore((state) => state.setPendingStart);
+  useWakeLock(Boolean(draft && !draft.completed));
 
   function startPendingWorkout() {
     const state = useWorkoutStore.getState();
@@ -304,13 +308,27 @@ export function ActiveWorkout({ workoutId }: { workoutId: string }) {
       </header>
 
       <div className="flex-1 space-y-4 overflow-y-auto px-4 py-4">
-        {draft.exercises.map((exercise) => (
-          <WorkoutExerciseCard
-            key={exercise.id}
-            exercise={exercise}
-            completed={draft.completed}
-          />
-        ))}
+        {groupExercises(
+          draft.exercises.map((exercise) => ({
+            ...exercise,
+            supersetGroup: exercise.supersetGroup ?? null,
+          })),
+        ).map((block) =>
+          block.kind === "superset" ? (
+            <WorkoutSupersetCard
+              key={block.id}
+              a={block.a}
+              b={block.b}
+              completed={draft.completed}
+            />
+          ) : (
+            <WorkoutExerciseCard
+              key={block.id}
+              exercise={block.exercise}
+              completed={draft.completed}
+            />
+          ),
+        )}
 
         <Button
           type="button"

@@ -25,9 +25,13 @@ import {
 import {
   formatDate,
   formatDuration,
+  formatSetLoad,
   formatVolume,
+  parseReps,
+  parseWeight,
   workoutVolume,
 } from "@/lib/workout/helpers";
+import { asExerciseType } from "@/lib/content/constants";
 import type { WorkoutView } from "@/lib/workout/types";
 import { cn } from "@/lib/utils";
 
@@ -142,30 +146,24 @@ export function WorkoutDetailView({ workout }: { workout: WorkoutView }) {
 
     const payloadExercises = exercises.map((exercise) => ({
       id: exercise.id,
-      sets: exercise.sets.map((set) => {
-        const weight = set.weight.trim() === "" ? null : Number(set.weight);
-        const reps = Number(set.reps);
-        return {
-          id: set.id,
-          weight,
-          reps,
-          is_warmup: set.isWarmup,
-          to_failure: set.toFailure,
-        };
-      }),
+      sets: exercise.sets.map((set) => ({
+        id: set.id,
+        weight: parseWeight(set.weight),
+        reps: parseReps(set.reps) ?? 0,
+        is_warmup: set.isWarmup,
+        to_failure: set.toFailure,
+      })),
     }));
 
     const invalidSet = exercises
       .flatMap((exercise) => exercise.sets)
-      .find(
-        (set) =>
-          set.reps.trim() === "" ||
-          !Number.isInteger(Number(set.reps)) ||
-          Number(set.reps) < 0 ||
-          (set.weight.trim() !== "" &&
-            (!Number.isFinite(Number(set.weight)) ||
-              Number(set.weight) < 0)),
-      );
+      .find((set) => {
+        const reps = parseReps(set.reps);
+        const weight = parseWeight(set.weight);
+        return (
+          reps === null || (set.weight.trim() !== "" && weight === null)
+        );
+      });
 
     if (invalidSet) {
       setFormError("Enter a valid weight and whole-number reps for every set.");
@@ -263,6 +261,19 @@ export function WorkoutDetailView({ workout }: { workout: WorkoutView }) {
           <Card key={exercise.id}>
             <CardHeader className="flex-row items-center justify-between">
               <CardTitle className="min-w-0 truncate">
+                {exercise.supersetGroup != null ? (
+                  <span className="mr-2 text-primary">
+                    {exercises
+                      .filter(
+                        (item) =>
+                          item.supersetGroup === exercise.supersetGroup,
+                      )
+                      .sort((a, b) => a.position - b.position)
+                      .findIndex((item) => item.id === exercise.id) === 0
+                      ? "A1"
+                      : "A2"}
+                  </span>
+                ) : null}
                 {editing ? (
                   exercise.name
                 ) : (
@@ -308,7 +319,11 @@ export function WorkoutDetailView({ workout }: { workout: WorkoutView }) {
                         inputMode="decimal"
                         min="0"
                         step="0.25"
-                        placeholder="KG"
+                        placeholder={
+                          asExerciseType(exercise.type) === "bodyweight"
+                            ? "+KG"
+                            : "KG"
+                        }
                         value={set.weight}
                         onChange={(event) =>
                           updateSet(
@@ -362,7 +377,11 @@ export function WorkoutDetailView({ workout }: { workout: WorkoutView }) {
                   <p key={set.id} className="text-sm">
                     Set {set.setIndex}
                     <span className="ml-3 text-muted-foreground">
-                      {set.weight ?? 0} kg × {set.reps}
+                      {formatSetLoad(
+                        set.weight.trim() === "" ? null : Number(set.weight),
+                        Number(set.reps),
+                        asExerciseType(exercise.type),
+                      )}
                       {set.isWarmup ? " · Warm-up" : ""}
                       {set.toFailure ? " · Failure" : ""}
                     </span>
