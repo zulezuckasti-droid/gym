@@ -52,13 +52,25 @@ type WorkoutState = {
   retryQueue: () => Promise<SyncStatus>;
 };
 
+let pendingStorageWrite: Promise<void> = Promise.resolve();
+let activeSync: Promise<SyncStatus> | null = null;
+
 const idbStorage = createJSONStorage(() => ({
-  getItem: async (name: string) => (await get<string>(name)) ?? null,
-  setItem: async (name: string, value: string) => {
-    await idbSet(name, value);
+  getItem: async (name: string) => {
+    await pendingStorageWrite.catch(() => undefined);
+    return (await get<string>(name)) ?? null;
   },
-  removeItem: async (name: string) => {
-    await del(name);
+  setItem: (name: string, value: string) => {
+    pendingStorageWrite = pendingStorageWrite
+      .catch(() => undefined)
+      .then(() => idbSet(name, value));
+    return pendingStorageWrite;
+  },
+  removeItem: (name: string) => {
+    pendingStorageWrite = pendingStorageWrite
+      .catch(() => undefined)
+      .then(() => del(name));
+    return pendingStorageWrite;
   },
 }));
 
@@ -75,7 +87,14 @@ export const useWorkoutStore = create<WorkoutState>()(
       syncStatus: "local",
       pendingStart: null,
 
-      setHydrated: () => set({ hydrated: true }),
+      setHydrated: () =>
+        set((state) => ({
+          hydrated: true,
+          syncStatus:
+            state.queue.length > 0 && state.syncStatus !== "failed"
+              ? "pending"
+              : state.syncStatus,
+        })),
 
       startWorkout: (template) => {
         if (!get().hydrated) return "";
@@ -83,7 +102,12 @@ export const useWorkoutStore = create<WorkoutState>()(
         set({
           draft,
           pendingStart: null,
-          syncStatus: get().queue.length > 0 ? get().syncStatus : "local",
+          syncStatus:
+            get().queue.length > 0
+              ? get().syncStatus === "failed"
+                ? "failed"
+                : "pending"
+              : "local",
         });
         return draft.id;
       },
@@ -340,41 +364,85 @@ export const useWorkoutStore = create<WorkoutState>()(
         set({
           draft: { ...draft, completed: true, showSummary: true },
           queue: existing ? get().queue : [...get().queue, queued],
+          syncStatus: "pending",
         });
 
+        await pendingStorageWrite;
         return get().retryQueue();
       },
 
-      retryQueue: async () => {
-        const { queue, syncStatus } = get();
-        if (queue.length === 0) {
-          if (syncStatus === "syncing") set({ syncStatus: "synced" });
-          return get().syncStatus;
-        }
-        if (syncStatus === "syncing") return syncStatus;
+      retryQueue: () => {
+        if (activeSync) return activeSync;
 
-        set({ syncStatus: "syncing" });
-        const supabase = createClient();
-
-        for (let index = 0; index < queue.length; index += 1) {
-          const item = queue[index];
-          const { error } = await supabase.rpc("finish_workout", {
-            payload: item.payload as unknown as Json,
-          });
-
-          if (error) {
-            const offline =
-              typeof navigator !== "undefined" && !navigator.onLine;
-            set({
-              queue: queue.slice(index),
-              syncStatus: offline ? "pending" : "failed",
-            });
+        const run = async (): Promise<SyncStatus> => {
+          if (get().queue.length === 0) {
+            if (get().syncStatus === "syncing") {
+              set({ syncStatus: "synced" });
+            }
             return get().syncStatus;
           }
-        }
 
-        set({ queue: [], syncStatus: "synced" });
-        return "synced";
+          if (typeof navigator !== "undefined" && !navigator.onLine) {
+            set({ syncStatus: "pending" });
+            await pendingStorageWrite;
+            return "pending";
+          }
+
+          set({ syncStatus: "syncing" });
+          const supabase = createClient();
+
+          while (true) {
+            const item = get().queue[0];
+            if (!item) {
+              set({ syncStatus: "synced" });
+              await pendingStorageWrite;
+              return "synced";
+            }
+
+            if (typeof navigator !== "undefined" && !navigator.onLine) {
+              set({ syncStatus: "pending" });
+              await pendingStorageWrite;
+              return "pending";
+            }
+
+            try {
+              const { error } = await supabase.rpc("finish_workout", {
+                payload: item.payload as unknown as Json,
+              });
+
+              if (error) {
+                const offline =
+                  typeof navigator !== "undefined" && !navigator.onLine;
+                set({ syncStatus: offline ? "pending" : "failed" });
+                await pendingStorageWrite;
+                return get().syncStatus;
+              }
+            } catch {
+              const offline =
+                typeof navigator !== "undefined" && !navigator.onLine;
+              set({ syncStatus: offline ? "pending" : "failed" });
+              await pendingStorageWrite;
+              return get().syncStatus;
+            }
+
+            set((state) => {
+              const queue = state.queue.filter(
+                (queued) =>
+                  queued.payload.workout.id !== item.payload.workout.id,
+              );
+              return {
+                queue,
+                syncStatus: queue.length === 0 ? "synced" : "syncing",
+              };
+            });
+            await pendingStorageWrite;
+          }
+        };
+
+        activeSync = run().finally(() => {
+          activeSync = null;
+        });
+        return activeSync;
       },
     }),
     {
