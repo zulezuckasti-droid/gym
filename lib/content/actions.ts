@@ -70,6 +70,7 @@ export async function renameExercise(
   revalidatePath("/exercises");
   revalidatePath(`/exercises/${id}`);
   revalidatePath("/");
+  revalidatePath("/progress");
   return { error: null };
 }
 
@@ -87,6 +88,7 @@ export async function archiveExercise(id: string): Promise<ActionResult> {
   revalidatePath("/exercises");
   revalidatePath("/");
   revalidatePath("/templates");
+  revalidatePath("/progress");
   return { error: null };
 }
 

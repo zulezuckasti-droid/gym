@@ -7,15 +7,19 @@ import { ChevronLeft } from "lucide-react";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { ExerciseProgressSection } from "@/components/exercises/exercise-progress-section";
 import { archiveExercise, renameExercise } from "@/lib/content/actions";
 import type { ExerciseRow } from "@/lib/content/queries";
+import type { ExerciseProgressData } from "@/lib/progress/types";
 import { cn } from "@/lib/utils";
 
 export function ExerciseDetailScreen({
   exercise,
+  progress,
   error,
 }: {
   exercise: ExerciseRow | null;
+  progress: ExerciseProgressData;
   error: string | null;
 }) {
   const router = useRouter();
@@ -75,7 +79,7 @@ export function ExerciseDetailScreen({
   }
 
   return (
-    <main className="mx-auto flex w-full max-w-lg flex-1 flex-col px-4 pt-6">
+    <main className="mx-auto flex w-full max-w-lg flex-1 flex-col px-4 pt-6 pb-8">
       <div className="flex items-center gap-2">
         <Link
           href="/exercises"
@@ -88,11 +92,24 @@ export function ExerciseDetailScreen({
           <ChevronLeft className="size-5" />
         </Link>
         <h1 className="flex-1 text-xl font-semibold tracking-tight">
-          Exercise
+          {item.name}
         </h1>
       </div>
 
-      <div className="mt-6 space-y-4">
+      <ExerciseProgressSection
+        pr={progress.pr}
+        maxWeight={progress.maxWeight}
+        history={progress.history}
+      />
+
+      {progress.error ? (
+        <p className="mt-4 text-sm text-destructive" role="alert">
+          {progress.error}
+        </p>
+      ) : null}
+
+      <div className="mt-8 space-y-4">
+        <h2 className="text-sm font-medium text-muted-foreground">Manage</h2>
         <div className="space-y-2">
           <Label htmlFor="name">Name</Label>
           <Input

@@ -30,6 +30,7 @@ import {
   draftVolume,
   formatDuration,
   formatVolume,
+  newPersonalRecords,
 } from "@/lib/workout/helpers";
 import { useWorkoutStore } from "@/lib/workout/store";
 import type { ExerciseCatalogItem } from "@/lib/workout/types";
@@ -182,6 +183,7 @@ export function ActiveWorkout({ workoutId }: { workoutId: string }) {
       .getState()
       .queue.find((item) => item.payload.workout.id === draft.id);
     const durationEnd = queued?.payload.workout.finished_at ?? finishedAt;
+    const prs = newPersonalRecords(draft);
 
     return (
       <main className="mx-auto flex min-h-dvh w-full max-w-lg flex-col px-4 pt-[max(1rem,env(safe-area-inset-top))] pb-[max(1rem,env(safe-area-inset-bottom))]">
@@ -217,6 +219,16 @@ export function ActiveWorkout({ workoutId }: { workoutId: string }) {
               <p className="text-sm text-muted-foreground">
                 Volume {formatVolume(draftVolume(draft))}
               </p>
+              {prs.length > 0 ? (
+                <div className="space-y-1 pt-1">
+                  <p className="text-sm font-medium">New PRs</p>
+                  {prs.map((pr) => (
+                    <p key={pr.exerciseId} className="text-sm text-muted-foreground">
+                      {pr.name} · {pr.weight} kg × {pr.reps}
+                    </p>
+                  ))}
+                </div>
+              ) : null}
             </CardContent>
           </Card>
 

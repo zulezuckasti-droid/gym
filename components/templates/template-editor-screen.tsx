@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useMemo, useState, useTransition } from "react";
 import { ChevronLeft, Minus, Plus, Search, Trash2 } from "lucide-react";
+import { ExerciseNameLink } from "@/components/exercises/exercise-name-link";
 import { Button, buttonVariants } from "@/components/ui/button";
 import {
   Drawer,
@@ -213,7 +214,9 @@ export function TemplateEditorScreen({
                 className="flex items-center gap-3 rounded-xl border px-4 py-3"
               >
                 <div className="min-w-0 flex-1">
-                  <p className="truncate font-medium">{item.name}</p>
+                  <p className="truncate font-medium">
+                    <ExerciseNameLink id={item.exerciseId} name={item.name} />
+                  </p>
                   <p className="text-sm text-muted-foreground">Working sets</p>
                 </div>
                 <div className="flex items-center gap-1">

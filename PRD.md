@@ -1,9 +1,9 @@
 # PRD - Gym Workout PWA
 
-Verzija: 1.7
+Verzija: 1.8
 Datum: 8. septembar 2026.
 Poslednji update: 9. septembar 2026.
-Status: u razvoju — faza 8 završena, sledeća faza 9 (Progres)
+Status: u razvoju — faza 9 završena, sledeća faza 10 (Završnica)
 
 ---
 
@@ -15,8 +15,8 @@ Status: u razvoju — faza 8 završena, sledeća faza 9 (Progres)
 
 | | |
 |---|---|
-| **Aktivna faza** | 9 — Progres |
-| **Sledeći korak** | PR view, stranica vežbe i grafikoni (Recharts) |
+| **Aktivna faza** | 10 — Završnica |
+| **Sledeći korak** | Superseti, bodyweight, dnd-kit, PIN, wake lock, export, Serwist, Vercel |
 | **Blokirano od vlasnika** | Connect GitHub (push još nije urađen) |
 
 ### Napredak po fazama
@@ -31,7 +31,7 @@ Status: u razvoju — faza 8 završena, sledeća faza 9 (Progres)
 | 6 | Offline | ✅ Završeno | 2026-09-09 | iPhone E2E prošao — offline finish, reconnect, jedan workout bez duplikata |
 | 7 | Sadržaj | ✅ Završeno | 2026-09-09 | iPhone E2E prošao; ispravljeno čuvanje neizmenjenog imena templatea |
 | 8 | Istorija | ✅ Završeno | 2026-09-09 | iPhone E2E prošao — edit setova/datuma, add/delete set, brisanje treninga |
-| 9 | Progres | ⏳ Na čekanju | — | |
+| 9 | Progres | ✅ Završeno | 2026-09-09 | PR view, Recharts, stranica vežbe — iPhone E2E prošao |
 | 10 | Završnica | ⏳ Na čekanju | — | |
 
 ### Detalji završenih faza
@@ -130,12 +130,23 @@ Status: u razvoju — faza 8 završena, sledeća faza 9 (Progres)
 - [x] Lint i production build prolaze
 - [x] iPhone E2E prošao — izmene odmah osvežavaju History i Previous podatke
 
+**Faza 9 — Progres**
+- [x] View `exercise_prs` (`security_invoker = true`), warmup izuzet
+- [x] TypeScript tipovi regenerisani
+- [x] Recharts + shadcn `chart`
+- [x] `/progress` — PR lista, max kilaža po vežbi, volumen po treningu, treninzi po nedelji
+- [x] `/exercises/[id]` — trenutni PR, grafikon, istorija setova
+- [x] Tap na ime vežbe u History, Progress i Templates vodi na stranicu vežbe
+- [x] Finish summary prikazuje nove PR-ove
+- [x] Lint i production build prolaze
+- [x] iPhone E2E — grafikoni odražavaju stvarne podatke
+
 ### Infrastruktura
 
 | Stavka | Status |
 |--------|--------|
 | Supabase projekat | ✅ `gabxxzxniarebovrhsjy` |
-| Lokalne migracije | ✅ 7 fajlova |
+| Lokalne migracije | ✅ 8 fajlova |
 | Env varijable | ✅ `.env.local` |
 | GitHub repo `gym` | ⏳ Nije kreiran |
 | Vercel deploy | ⏳ Faza 10 |
@@ -572,7 +583,7 @@ Svaka tačka je završena tek kada acceptance kriterijum prođe. **Posle svake z
 | 6 | Offline | ✅ | Idempotentni queue, retry na launch/focus/online/manual | Finish offline → reconnect → jedan trening u bazi, bez duplikata |
 | 7 | Sadržaj | ✅ | Biblioteka, template CRUD, Empty Workout, ad-hoc vežbe | Korisnik kreira sopstveni template — iPhone E2E prošao |
 | 8 | Istorija | ✅ | Read-only već postoji; dodati editovanje, promenu datuma, brisanje | Edit ne kvari PR podatke — iPhone E2E prošao |
-| 9 | Progres | ⏳ | PR, stranica vežbe, grafikoni (Recharts) | Grafikoni odražavaju stvarne podatke |
+| 9 | Progres | ✅ | PR, stranica vežbe, grafikoni (Recharts) | Grafikoni odražavaju stvarne podatke — iPhone E2E prošao |
 | 10 | Završnica | ⏳ | Superseti, bodyweight, dnd-kit, PIN, wake lock, export, Serwist, Vercel | Puna specifikacija funkcionalna na iPhoneu |
 
 **Pravila protiv preopterećenja:**

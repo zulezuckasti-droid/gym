@@ -187,6 +187,32 @@ export function isPersonalRecordSet(
   return false;
 }
 
+export type NewPersonalRecord = {
+  exerciseId: string;
+  name: string;
+  weight: number;
+  reps: number;
+};
+
+export function newPersonalRecords(draft: WorkoutDraft): NewPersonalRecord[] {
+  const records = new Map<string, NewPersonalRecord>();
+  for (const exercise of draft.exercises) {
+    for (const set of exercise.sets) {
+      if (!isPersonalRecordSet(exercise, set)) continue;
+      const weight = parseWeight(set.weight);
+      const reps = parseReps(set.reps);
+      if (weight === null || reps === null) continue;
+      records.set(exercise.exerciseId, {
+        exerciseId: exercise.exerciseId,
+        name: exercise.name,
+        weight,
+        reps,
+      });
+    }
+  }
+  return [...records.values()];
+}
+
 export function formatPrevious(previous: PreviousSet | null): string {
   if (!previous) return "—";
   const weight = previous.weight === null ? "BW" : `${previous.weight} kg`;
@@ -242,6 +268,7 @@ export function queuedToView(item: {
     pending: true,
     exercises: payload.exercises.map((exercise) => ({
       id: exercise.id,
+      exerciseId: exercise.exercise_id,
       name: exerciseNames[exercise.id] ?? "Exercise",
       position: exercise.position,
       sets: exercise.sets.map((set) => ({

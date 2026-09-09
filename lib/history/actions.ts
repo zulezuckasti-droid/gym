@@ -81,6 +81,8 @@ export async function updateWorkoutHistory(
   revalidatePath("/history");
   revalidatePath(`/history/${payload.workout_id}`);
   revalidatePath("/");
+  revalidatePath("/progress");
+  revalidatePath("/exercises", "layout");
   return { error: null };
 }
 
@@ -110,5 +112,7 @@ export async function deleteWorkoutHistory(
   revalidatePath("/history");
   revalidatePath(`/history/${workoutId}`);
   revalidatePath("/");
+  revalidatePath("/progress");
+  revalidatePath("/exercises", "layout");
   return { error: null };
 }

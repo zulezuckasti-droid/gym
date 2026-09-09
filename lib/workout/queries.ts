@@ -28,6 +28,7 @@ type WorkoutRow = {
   workout_exercises: Array<{
     id: string;
     position: number;
+    exercise_id: string;
     exercises: { name: string } | null;
     sets: Array<{
       id: string;
@@ -70,6 +71,7 @@ const workoutSelect = `
   workout_exercises (
     id,
     position,
+    exercise_id,
     exercises ( name ),
     sets (
       id,
@@ -120,6 +122,7 @@ function mapWorkout(row: WorkoutRow, pending = false): WorkoutView {
       .sort((a, b) => a.position - b.position)
       .map((exercise) => ({
         id: exercise.id,
+        exerciseId: exercise.exercise_id,
         name: exercise.exercises?.name ?? "Exercise",
         position: exercise.position,
         sets: (exercise.sets ?? [])
@@ -175,7 +178,7 @@ export async function getHomeTemplates(): Promise<{
     rows = (second.data ?? []) as unknown as TemplateRow[];
   }
 
-  const [catalogResult, previousResult, workoutExercisesResult] =
+  const [catalogResult, previousResult, prsResult] =
     await Promise.all([
       supabase
         .from("exercises")
@@ -187,11 +190,11 @@ export async function getHomeTemplates(): Promise<{
         .select("exercise_id, set_index, weight, reps, to_failure")
         .order("exercise_id")
         .order("set_index"),
-      supabase.from("workout_exercises").select("id, exercise_id"),
+      supabase.from("exercise_prs").select("exercise_id, weight"),
     ]);
 
   const dataError =
-    catalogResult.error ?? previousResult.error ?? workoutExercisesResult.error;
+    catalogResult.error ?? previousResult.error ?? prsResult.error;
   if (dataError) {
     return { templates: [], exerciseCatalog: [], error: dataError.message };
   }
@@ -217,37 +220,10 @@ export async function getHomeTemplates(): Promise<{
     previousByExercise.set(row.exercise_id, previous);
   }
 
-  const workoutExerciseRows = workoutExercisesResult.data ?? [];
-  const exerciseByWorkoutExercise = new Map(
-    workoutExerciseRows.map((row) => [row.id, row.exercise_id]),
-  );
-  const workoutExerciseIds = workoutExerciseRows.map((row) => row.id);
   const prsByExercise = new Map<string, number>();
-
-  if (workoutExerciseIds.length > 0) {
-    const { data: setRows, error: setsError } = await supabase
-      .from("sets")
-      .select("workout_exercise_id, weight")
-      .in("workout_exercise_id", workoutExerciseIds)
-      .eq("is_warmup", false)
-      .gt("reps", 0)
-      .not("weight", "is", null);
-
-    if (setsError) {
-      return { templates: [], exerciseCatalog: [], error: setsError.message };
-    }
-
-    for (const setRow of setRows ?? []) {
-      const exerciseId = exerciseByWorkoutExercise.get(
-        setRow.workout_exercise_id,
-      );
-      if (!exerciseId || setRow.weight === null) continue;
-      const weight = Number(setRow.weight);
-      prsByExercise.set(
-        exerciseId,
-        Math.max(prsByExercise.get(exerciseId) ?? 0, weight),
-      );
-    }
+  for (const row of prsResult.data ?? []) {
+    if (!row.exercise_id || row.weight === null) continue;
+    prsByExercise.set(row.exercise_id, Number(row.weight));
   }
 
   const exerciseCatalog: ExerciseCatalogItem[] = catalogRows.map((exercise) => ({

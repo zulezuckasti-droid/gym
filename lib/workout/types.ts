@@ -76,6 +76,7 @@ export type WorkoutView = {
   pending: boolean;
   exercises: Array<{
     id: string;
+    exerciseId: string;
     name: string;
     position: number;
     sets: Array<{

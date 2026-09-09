@@ -14,6 +14,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { ExerciseNameLink } from "@/components/exercises/exercise-name-link";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -261,7 +262,16 @@ export function WorkoutDetailView({ workout }: { workout: WorkoutView }) {
         {exercises.map((exercise) => (
           <Card key={exercise.id}>
             <CardHeader className="flex-row items-center justify-between">
-              <CardTitle className="min-w-0 truncate">{exercise.name}</CardTitle>
+              <CardTitle className="min-w-0 truncate">
+                {editing ? (
+                  exercise.name
+                ) : (
+                  <ExerciseNameLink
+                    id={exercise.exerciseId}
+                    name={exercise.name}
+                  />
+                )}
+              </CardTitle>
               {editing ? (
                 <Button
                   type="button"

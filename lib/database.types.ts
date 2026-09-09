@@ -265,6 +265,17 @@ export type Database = {
         };
         Relationships: [];
       };
+      exercise_prs: {
+        Row: {
+          exercise_id: string | null;
+          finished_at: string | null;
+          performed_on: string | null;
+          reps: number | null;
+          weight: number | null;
+          workout_id: string | null;
+        };
+        Relationships: [];
+      };
     };
     Functions: {
       finish_workout: { Args: { payload: Json }; Returns: Json };
