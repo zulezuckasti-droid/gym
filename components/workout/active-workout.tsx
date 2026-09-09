@@ -2,9 +2,17 @@
 
 import { useRouter } from "next/navigation";
 import { Plus, X } from "lucide-react";
-import { useState } from "react";
+import { useState, useTransition } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import {
   Drawer,
   DrawerContent,
@@ -15,6 +23,8 @@ import {
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { WorkoutExerciseCard } from "@/components/workout/workout-exercise-card";
+import { addExerciseToTemplate } from "@/lib/content/actions";
+import { EMPTY_WORKOUT_NAME } from "@/lib/content/constants";
 import {
   draftHasConfirmedSet,
   draftVolume,
@@ -22,23 +32,77 @@ import {
   formatVolume,
 } from "@/lib/workout/helpers";
 import { useWorkoutStore } from "@/lib/workout/store";
+import type { ExerciseCatalogItem } from "@/lib/workout/types";
+
+type AdhocPrompt = {
+  draftExerciseId: string;
+  exerciseId: string;
+  exerciseName: string;
+  templateId: string;
+  templateName: string;
+};
 
 export function ActiveWorkout({ workoutId }: { workoutId: string }) {
   const router = useRouter();
   const [addExerciseOpen, setAddExerciseOpen] = useState(false);
+  const [adhocPrompt, setAdhocPrompt] = useState<AdhocPrompt | null>(null);
+  const [pending, startTransition] = useTransition();
   const hydrated = useWorkoutStore((state) => state.hydrated);
   const draft = useWorkoutStore((state) => state.draft);
   const syncStatus = useWorkoutStore((state) => state.syncStatus);
   const pendingStart = useWorkoutStore((state) => state.pendingStart);
   const addExercise = useWorkoutStore((state) => state.addExercise);
+  const markExerciseInTemplate = useWorkoutStore(
+    (state) => state.markExerciseInTemplate,
+  );
   const setNotes = useWorkoutStore((state) => state.setNotes);
   const openSummary = useWorkoutStore((state) => state.openSummary);
   const closeSummary = useWorkoutStore((state) => state.closeSummary);
   const finishAndSync = useWorkoutStore((state) => state.finishAndSync);
   const retryQueue = useWorkoutStore((state) => state.retryQueue);
   const startWorkout = useWorkoutStore((state) => state.startWorkout);
+  const startEmptyWorkout = useWorkoutStore((state) => state.startEmptyWorkout);
   const clearDraft = useWorkoutStore((state) => state.clearDraft);
   const setPendingStart = useWorkoutStore((state) => state.setPendingStart);
+
+  function startPendingWorkout() {
+    const state = useWorkoutStore.getState();
+    if (!state.pendingStart) return null;
+    if (
+      !state.pendingStart.id &&
+      state.pendingStart.name === EMPTY_WORKOUT_NAME
+    ) {
+      return startEmptyWorkout(state.draft?.exerciseCatalog ?? []);
+    }
+    return startWorkout(state.pendingStart);
+  }
+
+  function handleSelectExercise(item: ExerciseCatalogItem) {
+    const draftExerciseId = addExercise(item);
+    setAddExerciseOpen(false);
+    if (!draftExerciseId || !draft?.templateId) return;
+    setAdhocPrompt({
+      draftExerciseId,
+      exerciseId: item.exerciseId,
+      exerciseName: item.name,
+      templateId: draft.templateId,
+      templateName: draft.name,
+    });
+  }
+
+  function handleAddToTemplate() {
+    if (!adhocPrompt) return;
+    startTransition(async () => {
+      const result = await addExerciseToTemplate(
+        adhocPrompt.templateId,
+        adhocPrompt.exerciseId,
+      );
+      if (!result.error) {
+        markExerciseInTemplate(adhocPrompt.draftExerciseId);
+      }
+      setAdhocPrompt(null);
+    });
+  }
 
   if (!hydrated) {
     return (
@@ -74,7 +138,7 @@ export function ActiveWorkout({ workoutId }: { workoutId: string }) {
     );
 
     if (state.pendingStart) {
-      const nextId = startWorkout(state.pendingStart);
+      const nextId = startPendingWorkout();
       if (nextId) router.push(`/workout/${nextId}`);
       return;
     }
@@ -94,7 +158,7 @@ export function ActiveWorkout({ workoutId }: { workoutId: string }) {
     );
     if (status === "synced" && !stillQueued) {
       if (state.pendingStart) {
-        const nextId = startWorkout(state.pendingStart);
+        const nextId = startPendingWorkout();
         if (nextId) router.push(`/workout/${nextId}`);
         return;
       }
@@ -270,7 +334,7 @@ export function ActiveWorkout({ workoutId }: { workoutId: string }) {
           <DrawerHeader className="text-left">
             <DrawerTitle>Add exercise</DrawerTitle>
             <DrawerDescription>
-              Add an exercise to this workout only.
+              Pick an exercise from your library.
             </DrawerDescription>
           </DrawerHeader>
           <div className="max-h-[60dvh] space-y-2 overflow-y-auto px-4 pb-[max(1rem,env(safe-area-inset-bottom))]">
@@ -287,10 +351,7 @@ export function ActiveWorkout({ workoutId }: { workoutId: string }) {
                   type="button"
                   variant="outline"
                   className="h-12 w-full justify-start"
-                  onClick={() => {
-                    addExercise(item);
-                    setAddExerciseOpen(false);
-                  }}
+                  onClick={() => handleSelectExercise(item)}
                 >
                   {item.name}
                 </Button>
@@ -298,6 +359,40 @@ export function ActiveWorkout({ workoutId }: { workoutId: string }) {
           </div>
         </DrawerContent>
       </Drawer>
+
+      <Dialog
+        open={adhocPrompt !== null}
+        onOpenChange={(open) => {
+          if (!open) setAdhocPrompt(null);
+        }}
+      >
+        <DialogContent showCloseButton={false}>
+          <DialogHeader>
+            <DialogTitle>Add to template?</DialogTitle>
+            <DialogDescription>
+              Add {adhocPrompt?.exerciseName} to {adhocPrompt?.templateName}{" "}
+              template permanently?
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter className="flex-col sm:flex-col">
+            <Button
+              className="h-11 w-full"
+              disabled={pending}
+              onClick={handleAddToTemplate}
+            >
+              {pending ? "Saving…" : `Add to ${adhocPrompt?.templateName}`}
+            </Button>
+            <Button
+              variant="outline"
+              className="h-11 w-full"
+              disabled={pending}
+              onClick={() => setAdhocPrompt(null)}
+            >
+              This workout only
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </main>
   );
 }

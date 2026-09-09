@@ -9,6 +9,7 @@ import {
   buildFinishPayload,
   canConfirmSet,
   createDraft,
+  createEmptyDraft,
   namesFromDraft,
 } from "@/lib/workout/helpers";
 import type {
@@ -28,6 +29,7 @@ type WorkoutState = {
   pendingStart: WorkoutTemplate | null;
   setHydrated: () => void;
   startWorkout: (template: WorkoutTemplate) => string;
+  startEmptyWorkout: (catalog: ExerciseCatalogItem[]) => string;
   updateSet: (
     exerciseId: string,
     setId: string,
@@ -41,7 +43,8 @@ type WorkoutState = {
   ) => void;
   deleteSet: (exerciseId: string, setId: string) => void;
   addSet: (exerciseId: string) => void;
-  addExercise: (exercise: ExerciseCatalogItem) => void;
+  addExercise: (exercise: ExerciseCatalogItem) => string | null;
+  markExerciseInTemplate: (draftExerciseId: string) => void;
   toggleExerciseCollapsed: (exerciseId: string) => void;
   setNotes: (notes: string) => void;
   openSummary: () => void;
@@ -99,6 +102,22 @@ export const useWorkoutStore = create<WorkoutState>()(
       startWorkout: (template) => {
         if (!get().hydrated) return "";
         const draft = createDraft(template);
+        set({
+          draft,
+          pendingStart: null,
+          syncStatus:
+            get().queue.length > 0
+              ? get().syncStatus === "failed"
+                ? "failed"
+                : "pending"
+              : "local",
+        });
+        return draft.id;
+      },
+
+      startEmptyWorkout: (catalog) => {
+        if (!get().hydrated) return "";
+        const draft = createEmptyDraft(catalog);
         set({
           draft,
           pendingStart: null,
@@ -275,8 +294,10 @@ export const useWorkoutStore = create<WorkoutState>()(
             (exercise) => exercise.exerciseId === catalogExercise.exerciseId,
           )
         ) {
-          return;
+          return null;
         }
+
+        const draftExerciseId = crypto.randomUUID();
 
         set({
           draft: {
@@ -284,12 +305,13 @@ export const useWorkoutStore = create<WorkoutState>()(
             exercises: [
               ...draft.exercises,
               {
-                id: crypto.randomUUID(),
+                id: draftExerciseId,
                 exerciseId: catalogExercise.exerciseId,
                 name: catalogExercise.name,
                 position: draft.exercises.length,
                 personalRecordWeight: catalogExercise.personalRecordWeight,
                 collapsed: false,
+                isAdhoc: draft.templateId !== null,
                 sets: Array.from({ length: 3 }, (_, index) => {
                   const previous = catalogExercise.previousSets[index] ?? null;
                   return {
@@ -308,6 +330,23 @@ export const useWorkoutStore = create<WorkoutState>()(
                 }),
               },
             ],
+          },
+        });
+
+        return draftExerciseId;
+      },
+
+      markExerciseInTemplate: (draftExerciseId) => {
+        const draft = get().draft;
+        if (!draft) return;
+        set({
+          draft: {
+            ...draft,
+            exercises: draft.exercises.map((exercise) =>
+              exercise.id === draftExerciseId
+                ? { ...exercise, isAdhoc: false }
+                : exercise,
+            ),
           },
         });
       },

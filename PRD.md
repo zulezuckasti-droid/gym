@@ -1,9 +1,9 @@
 # PRD - Gym Workout PWA
 
-Verzija: 1.5
+Verzija: 1.7
 Datum: 8. septembar 2026.
 Poslednji update: 9. septembar 2026.
-Status: u razvoju — faza 6 implementirana, čeka E2E na iPhoneu
+Status: u razvoju — faza 8 završena, sledeća faza 9 (Progres)
 
 ---
 
@@ -15,8 +15,8 @@ Status: u razvoju — faza 6 implementirana, čeka E2E na iPhoneu
 
 | | |
 |---|---|
-| **Aktivna faza** | 6 — Offline (implementirano, čeka iPhone test) |
-| **Sledeći korak** | E2E na iPhoneu: finish offline → reconnect → potvrditi jedan trening u bazi, bez duplikata |
+| **Aktivna faza** | 9 — Progres |
+| **Sledeći korak** | PR view, stranica vežbe i grafikoni (Recharts) |
 | **Blokirano od vlasnika** | Connect GitHub (push još nije urađen) |
 
 ### Napredak po fazama
@@ -28,9 +28,9 @@ Status: u razvoju — faza 6 implementirana, čeka E2E na iPhoneu
 | 3 | Auth | ✅ Završeno | 2026-09-08 | Magic link, session, zaštićene rute, logout — E2E test prošao |
 | 4 | MVP workout | ✅ Završeno | 2026-09-08 | E2E na iPhoneu prošao — start, draft recovery, finish, sync, istorija |
 | 5 | Core UX | ✅ Završeno | 2026-09-09 | Previous, numpad, collapse, set opcije, PR — E2E na iPhoneu prošao |
-| 6 | Offline | ⏳ Implementirano | 2026-09-09 | Kod, build i RPC idempotency test prolaze; čeka iPhone E2E |
-| 7 | Sadržaj | ⏳ Na čekanju | — | |
-| 8 | Istorija | ⏳ Na čekanju | — | |
+| 6 | Offline | ✅ Završeno | 2026-09-09 | iPhone E2E prošao — offline finish, reconnect, jedan workout bez duplikata |
+| 7 | Sadržaj | ✅ Završeno | 2026-09-09 | iPhone E2E prošao; ispravljeno čuvanje neizmenjenog imena templatea |
+| 8 | Istorija | ✅ Završeno | 2026-09-09 | iPhone E2E prošao — edit setova/datuma, add/delete set, brisanje treninga |
 | 9 | Progres | ⏳ Na čekanju | — | |
 | 10 | Završnica | ⏳ Na čekanju | — | |
 
@@ -86,7 +86,7 @@ Status: u razvoju — faza 6 implementirana, čeka E2E na iPhoneu
 **Faza 5 — Core UX**
 - [x] `Previous` prikaz i prepopulacija polja (`exercise_last_performance`)
 - [x] Potvrda seta jednim tapom kada su vrednosti iste
-- [x] Custom numpad (readOnly polja, bottom sheet)
+- [x] Custom numpad (readOnly polja, bottom sheet); posle potvrde jednog seta numpad se zatvara
 - [x] Collapse završene vežbe u rezime
 - [x] Warmup / to failure / delete set
 - [x] `+ Add set`, `+ Add exercise`
@@ -94,7 +94,7 @@ Status: u razvoju — faza 6 implementirana, čeka E2E na iPhoneu
 - [x] Build prolazi
 - [x] E2E na iPhoneu: 1 tap za isti set; 0 mrežnih poziva tokom treninga
 
-**Faza 6 — Offline** *(implementirano, čeka iPhone test)*
+**Faza 6 — Offline**
 - [x] Queue se trajno upisuje u IndexedDB pre prvog pokušaja slanja
 - [x] Offline `Done` odmah ostavlja trening u `pending` stanju bez mrežnog zahteva
 - [x] Retry na launch, povratak u foreground, `online` event i ručno iz Settings
@@ -102,14 +102,40 @@ Status: u razvoju — faza 6 implementirana, čeka E2E na iPhoneu
 - [x] Pending/syncing/failed status i ručni retry u UI-u
 - [x] Remote RPC idempotency test: isti payload dvaput → jedan workout (`synced`, zatim `already_synced`)
 - [x] Build prolazi
-- [ ] E2E na iPhoneu: finish offline → reconnect → jedan trening u bazi, bez duplikata
+- [x] E2E na iPhoneu: finish offline → reconnect → jedan trening u bazi, bez duplikata
+
+**Faza 7 — Sadržaj**
+- [x] Seed proširen na ~50 vežbi (`seed_default_exercises`, backfill po imenu)
+- [x] `/exercises` — pretraga, grupisanje po mišićnoj grupi, dodavanje custom vežbi
+- [x] `/exercises/[id]` — preimenovanje i arhiviranje vežbe
+- [x] `/templates` — lista, kreiranje novog templatea
+- [x] `/templates/[id]` — preimenovanje, dodavanje/uklanjanje vežbi, target sets, arhiviranje
+- [x] `Empty Workout` dugme na Home
+- [x] Ad-hoc dodavanje vežbe tokom treninga + dijalog `Add to {template} permanently?`
+- [x] `is_adhoc` u finish payload-u
+- [x] Linkovi Templates / Exercises na Home i Settings
+- [x] Build prolazi
+- [x] E2E na iPhoneu: korisnik kreira sopstveni template i vežbe bez hardkodovanih podataka
+- [x] Ispravljen `Save` za novo ime templatea bez potrebe za dodatnom izmenom
+- [x] Pretraga pri dodavanju vežbe u template
+
+**Faza 8 — Istorija**
+- [x] Editovanje kilaže i ponavljanja postojećih setova
+- [x] Dodavanje i brisanje setova uz automatsko ponovno numerisanje
+- [x] Promena datuma završenog treninga
+- [x] Brisanje celog treninga uz potvrdni dijalog
+- [x] Atomičan `update_workout_history` RPC pod RLS-om (`security_invoker`)
+- [x] RPC test u rollback transakciji kao `authenticated`
+- [x] TypeScript tipovi regenerisani
+- [x] Lint i production build prolaze
+- [x] iPhone E2E prošao — izmene odmah osvežavaju History i Previous podatke
 
 ### Infrastruktura
 
 | Stavka | Status |
 |--------|--------|
 | Supabase projekat | ✅ `gabxxzxniarebovrhsjy` |
-| Lokalne migracije | ✅ 5 fajlova |
+| Lokalne migracije | ✅ 7 fajlova |
 | Env varijable | ✅ `.env.local` |
 | GitHub repo `gym` | ⏳ Nije kreiran |
 | Vercel deploy | ⏳ Faza 10 |
@@ -543,9 +569,9 @@ Svaka tačka je završena tek kada acceptance kriterijum prođe. **Posle svake z
 | 3 | Auth | ✅ | Magic link, session, zaštićene rute, logout | Login → Home → logout → redirect na login |
 | 4 | MVP workout | ✅ | Template kartica, aktivni trening, lokalni draft, finish, sync, read-only istorija | End-to-end tok iz sekcije 4.1 na iPhoneu |
 | 5 | Core UX | ✅ | Previous, prepopulacija, numpad, collapse, warmup/to failure | 1 tap za isti set; 0 mrežnih poziva tokom treninga |
-| 6 | Offline | ⏳ | Idempotentni queue, retry na launch/focus/online/manual | Kod i RPC test prolaze; čeka iPhone E2E: finish offline → reconnect → jedan trening u bazi, bez duplikata |
-| 7 | Sadržaj | ⏳ | Biblioteka, template CRUD, Empty Workout, ad-hoc vežbe | Korisnik kreira sopstveni template |
-| 8 | Istorija | ⏳ | Read-only već postoji; dodati editovanje, promenu datuma, brisanje | Edit ne kvari PR podatke |
+| 6 | Offline | ✅ | Idempotentni queue, retry na launch/focus/online/manual | Finish offline → reconnect → jedan trening u bazi, bez duplikata |
+| 7 | Sadržaj | ✅ | Biblioteka, template CRUD, Empty Workout, ad-hoc vežbe | Korisnik kreira sopstveni template — iPhone E2E prošao |
+| 8 | Istorija | ✅ | Read-only već postoji; dodati editovanje, promenu datuma, brisanje | Edit ne kvari PR podatke — iPhone E2E prošao |
 | 9 | Progres | ⏳ | PR, stranica vežbe, grafikoni (Recharts) | Grafikoni odražavaju stvarne podatke |
 | 10 | Završnica | ⏳ | Superseti, bodyweight, dnd-kit, PIN, wake lock, export, Serwist, Vercel | Puna specifikacija funkcionalna na iPhoneu |
 

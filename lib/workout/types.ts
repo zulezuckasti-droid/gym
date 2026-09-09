@@ -50,6 +50,7 @@ export type DraftExercise = {
   position: number;
   personalRecordWeight: number | null;
   collapsed: boolean;
+  isAdhoc: boolean;
   sets: DraftSet[];
 };
 

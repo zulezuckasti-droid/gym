@@ -139,9 +139,15 @@ function mapWorkout(row: WorkoutRow, pending = false): WorkoutView {
 
 export async function getHomeTemplates(): Promise<{
   templates: WorkoutTemplate[];
+  exerciseCatalog: ExerciseCatalogItem[];
   error: string | null;
 }> {
   const supabase = await createClient();
+
+  const seededExercises = await supabase.rpc("seed_default_exercises");
+  if (seededExercises.error) {
+    return { templates: [], exerciseCatalog: [], error: seededExercises.error.message };
+  }
 
   async function fetchTemplates() {
     return supabase
@@ -153,18 +159,18 @@ export async function getHomeTemplates(): Promise<{
 
   const first = await fetchTemplates();
   if (first.error) {
-    return { templates: [], error: first.error.message };
+    return { templates: [], exerciseCatalog: [], error: first.error.message };
   }
 
   let rows = (first.data ?? []) as unknown as TemplateRow[];
   if (rows.length === 0) {
     const seeded = await supabase.rpc("seed_default_push_template");
     if (seeded.error) {
-      return { templates: [], error: seeded.error.message };
+      return { templates: [], exerciseCatalog: [], error: seeded.error.message };
     }
     const second = await fetchTemplates();
     if (second.error) {
-      return { templates: [], error: second.error.message };
+      return { templates: [], exerciseCatalog: [], error: second.error.message };
     }
     rows = (second.data ?? []) as unknown as TemplateRow[];
   }
@@ -187,7 +193,7 @@ export async function getHomeTemplates(): Promise<{
   const dataError =
     catalogResult.error ?? previousResult.error ?? workoutExercisesResult.error;
   if (dataError) {
-    return { templates: [], error: dataError.message };
+    return { templates: [], exerciseCatalog: [], error: dataError.message };
   }
 
   const catalogRows = catalogResult.data ?? [];
@@ -228,7 +234,7 @@ export async function getHomeTemplates(): Promise<{
       .not("weight", "is", null);
 
     if (setsError) {
-      return { templates: [], error: setsError.message };
+      return { templates: [], exerciseCatalog: [], error: setsError.message };
     }
 
     for (const setRow of setRows ?? []) {
@@ -255,6 +261,7 @@ export async function getHomeTemplates(): Promise<{
     templates: rows.map((row) =>
       mapTemplate(row, exerciseCatalog, previousByExercise, prsByExercise),
     ),
+    exerciseCatalog,
     error: null,
   };
 }

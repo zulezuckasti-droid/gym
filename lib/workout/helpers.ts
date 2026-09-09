@@ -1,7 +1,9 @@
 import type { FinishWorkoutPayload } from "@/lib/database.types";
+import { EMPTY_WORKOUT_NAME } from "@/lib/content/constants";
 import type {
   DraftExercise,
   DraftSet,
+  ExerciseCatalogItem,
   PreviousSet,
   WorkoutDraft,
   WorkoutTemplate,
@@ -32,6 +34,7 @@ export function createDraft(template: WorkoutTemplate): WorkoutDraft {
         position,
         personalRecordWeight: exercise.personalRecordWeight,
         collapsed: false,
+        isAdhoc: false,
         sets: Array.from({ length: exercise.targetSets }, (_, index) => ({
           id: crypto.randomUUID(),
           setIndex: index + 1,
@@ -43,6 +46,22 @@ export function createDraft(template: WorkoutTemplate): WorkoutDraft {
           previous: exercise.previousSets[index] ?? null,
         })),
       })),
+  };
+}
+
+export function createEmptyDraft(
+  exerciseCatalog: ExerciseCatalogItem[],
+): WorkoutDraft {
+  return {
+    id: crypto.randomUUID(),
+    templateId: null,
+    name: EMPTY_WORKOUT_NAME,
+    startedAt: new Date().toISOString(),
+    notes: "",
+    showSummary: false,
+    completed: false,
+    exerciseCatalog,
+    exercises: [],
   };
 }
 
@@ -94,6 +113,7 @@ export function buildFinishPayload(draft: WorkoutDraft): FinishWorkoutPayload {
         id: exercise.id,
         exercise_id: exercise.exerciseId,
         position: exercise.position,
+        is_adhoc: exercise.isAdhoc,
         sets: exercise.sets
           .filter((set) => set.confirmed)
           .map((set) => ({

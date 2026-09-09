@@ -270,6 +270,7 @@ export type Database = {
       finish_workout: { Args: { payload: Json }; Returns: Json };
       seed_default_exercises: { Args: never; Returns: number };
       seed_default_push_template: { Args: never; Returns: string };
+      update_workout_history: { Args: { payload: Json }; Returns: Json };
     };
     Enums: Record<string, never>;
     CompositeTypes: Record<string, never>;
@@ -299,6 +300,21 @@ export type FinishWorkoutPayload = {
       reps: number;
       is_warmup?: boolean;
       to_failure?: boolean;
+    }>;
+  }>;
+};
+
+export type UpdateWorkoutHistoryPayload = {
+  workout_id: string;
+  performed_on: string;
+  exercises: Array<{
+    id: string;
+    sets: Array<{
+      id: string;
+      weight: number | null;
+      reps: number;
+      is_warmup: boolean;
+      to_failure: boolean;
     }>;
   }>;
 };

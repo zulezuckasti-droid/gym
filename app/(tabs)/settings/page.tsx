@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { LogoutButton } from "@/components/auth/logout-button";
 import { SyncStatus } from "@/components/settings/sync-status";
 import { createClient } from "@/lib/supabase/server";
@@ -11,7 +12,25 @@ export default async function SettingsPage() {
     <main className="mx-auto flex w-full max-w-lg flex-1 flex-col px-4 pt-6">
       <h1 className="text-2xl font-semibold tracking-tight">Settings</h1>
 
-      <section className="mt-8 space-y-8">
+      <section className="mt-8 space-y-4">
+        <div>
+          <p className="text-sm text-muted-foreground">Content</p>
+          <div className="mt-2 flex flex-col gap-2">
+            <Link
+              href="/templates"
+              className="flex min-h-11 items-center text-sm font-medium hover:text-primary"
+            >
+              Manage templates
+            </Link>
+            <Link
+              href="/exercises"
+              className="flex min-h-11 items-center text-sm font-medium hover:text-primary"
+            >
+              Exercise library
+            </Link>
+          </div>
+        </div>
+
         <div>
           <p className="text-sm text-muted-foreground">Signed in as</p>
           <p className="mt-1 text-sm font-medium">{email ?? "Unknown"}</p>

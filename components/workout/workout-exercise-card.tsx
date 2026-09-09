@@ -89,14 +89,7 @@ export function WorkoutExerciseCard({
   function confirmFromNumpad() {
     if (!activeSet || !canConfirmSet(activeSet)) return;
     if (!activeSet.confirmed) confirmSet(exercise.id, activeSet.id);
-
-    const currentIndex = exercise.sets.findIndex(
-      (set) => set.id === activeSet.id,
-    );
-    const next = exercise.sets
-      .slice(currentIndex + 1)
-      .find((set) => !set.confirmed);
-    setActiveInput(next ? { setId: next.id, field: "weight" } : null);
+    setActiveInput(null);
   }
 
   return (
