@@ -32,6 +32,7 @@ import { Label } from "@/components/ui/label";
 import { createTemplate, reorderTemplates } from "@/lib/content/actions";
 import type { TemplateListItem } from "@/lib/content/queries";
 import { commitIme, formText, nameFieldProps } from "@/lib/form/live-text";
+import { cn, pressableClass } from "@/lib/utils";
 
 export function TemplatesScreen({
   templates,
@@ -130,7 +131,7 @@ export function TemplatesScreen({
                 {templates.map((template) => (
                   <SortableItem key={template.id} id={template.id}>
                     {(handleProps) => (
-                      <Card className="py-0">
+                      <Card className={cn("py-0", pressableClass)}>
                         <CardContent className="flex items-center p-0">
                           <Button
                             type="button"

@@ -17,6 +17,7 @@ import { EMPTY_WORKOUT_NAME } from "@/lib/content/constants";
 import { draftHasConfirmedSet, formatTime } from "@/lib/workout/helpers";
 import { useWorkoutStore } from "@/lib/workout/store";
 import type { ExerciseCatalogItem, WorkoutTemplate } from "@/lib/workout/types";
+import { cn, pressableClass } from "@/lib/utils";
 
 const EMPTY_WORKOUT_MARKER = "empty" as const;
 type PendingStart = WorkoutTemplate | typeof EMPTY_WORKOUT_MARKER;
@@ -119,13 +120,13 @@ export function HomeScreen({
         <div className="flex gap-2 text-sm">
           <Link
             href="/templates"
-            className="min-h-11 px-2 py-2 text-muted-foreground hover:text-foreground"
+            className="min-h-11 px-2 py-2 text-muted-foreground transition-colors duration-150 hover:text-foreground"
           >
             Templates
           </Link>
           <Link
             href="/exercises"
-            className="min-h-11 px-2 py-2 text-muted-foreground hover:text-foreground"
+            className="min-h-11 px-2 py-2 text-muted-foreground transition-colors duration-150 hover:text-foreground"
           >
             Exercises
           </Link>
@@ -136,7 +137,10 @@ export function HomeScreen({
         <button
           type="button"
           onClick={handleContinue}
-          className="mt-4 min-h-14 rounded-xl bg-primary/15 px-4 py-3 text-left ring-1 ring-primary/30"
+          className={cn(
+            pressableClass,
+            "mt-4 min-h-14 rounded-xl bg-primary/15 px-4 py-3 text-left ring-1 ring-primary/30 hover:bg-primary/25",
+          )}
         >
           <p className="text-sm font-medium text-primary">
             Continue {activeDraft.name}
@@ -160,7 +164,7 @@ export function HomeScreen({
           </p>
         ) : (
           templates.map((template) => (
-            <Card key={template.id} className="py-0">
+            <Card key={template.id} className={cn("py-0", pressableClass)}>
               <CardContent className="p-0">
                 <button
                   type="button"

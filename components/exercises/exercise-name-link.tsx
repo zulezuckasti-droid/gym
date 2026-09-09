@@ -17,7 +17,10 @@ export function ExerciseNameLink({
   return (
     <Link
       href={`/exercises/${id}`}
-      className={cn("hover:text-primary", className)}
+      className={cn(
+        "hover:text-primary transition-colors duration-150",
+        className,
+      )}
     >
       {name}
     </Link>

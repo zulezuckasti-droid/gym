@@ -18,6 +18,7 @@ import { ExerciseNameLink } from "@/components/exercises/exercise-name-link";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { NumberStepper } from "@/components/workout/number-stepper";
 import {
   deleteWorkoutHistory,
   updateWorkoutHistory,
@@ -302,76 +303,69 @@ export function WorkoutDetailView({ workout }: { workout: WorkoutView }) {
               ) : null}
               {exercise.sets.map((set, index) =>
                 editing ? (
-                  <div key={set.id} className="flex items-center gap-2">
-                    <span className="w-6 shrink-0 text-center text-sm text-muted-foreground">
-                      {index + 1}
-                    </span>
-                    <div className="min-w-0 flex-1">
-                      <Label
-                        htmlFor={`${set.id}-weight`}
-                        className="sr-only"
-                      >
+                  <div
+                    key={set.id}
+                    className="space-y-2 rounded-lg border border-border/80 p-2"
+                  >
+                    <div className="flex items-center gap-2">
+                      <span className="w-6 shrink-0 text-center text-sm text-muted-foreground">
+                        {index + 1}
+                      </span>
+                      <span className="w-10 shrink-0 text-xs font-medium text-muted-foreground">
+                        {asExerciseType(exercise.type) === "bodyweight"
+                          ? "+KG"
+                          : "KG"}
+                      </span>
+                      <Label htmlFor={`${set.id}-weight`} className="sr-only">
                         Set {index + 1} weight in kilograms
                       </Label>
-                      <Input
+                      <NumberStepper
                         id={`${set.id}-weight`}
-                        type="number"
-                        inputMode="decimal"
-                        min="0"
-                        step="0.25"
+                        value={set.weight}
                         placeholder={
                           asExerciseType(exercise.type) === "bodyweight"
                             ? "+KG"
                             : "KG"
                         }
-                        value={set.weight}
-                        onChange={(event) =>
-                          updateSet(
-                            exercise.id,
-                            set.id,
-                            "weight",
-                            event.target.value,
-                          )
-                        }
-                        className="h-11"
+                        aria-label={`Set ${index + 1} kilograms`}
                         disabled={pending}
+                        onChange={(value) =>
+                          updateSet(exercise.id, set.id, "weight", value)
+                        }
                       />
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="icon"
+                        aria-label={`Delete set ${index + 1}`}
+                        className="size-11 shrink-0 text-destructive"
+                        disabled={pending}
+                        onClick={() => removeSet(exercise.id, set.id)}
+                      >
+                        <Trash2 className="size-4" />
+                      </Button>
                     </div>
-                    <div className="min-w-0 flex-1">
+                    <div className="flex items-center gap-2">
+                      <span className="w-6 shrink-0" />
+                      <span className="w-10 shrink-0 text-xs font-medium text-muted-foreground">
+                        REPS
+                      </span>
                       <Label htmlFor={`${set.id}-reps`} className="sr-only">
                         Set {index + 1} repetitions
                       </Label>
-                      <Input
+                      <NumberStepper
                         id={`${set.id}-reps`}
-                        type="number"
-                        inputMode="numeric"
-                        min="0"
-                        step="1"
-                        placeholder="REPS"
+                        integer
                         value={set.reps}
-                        onChange={(event) =>
-                          updateSet(
-                            exercise.id,
-                            set.id,
-                            "reps",
-                            event.target.value,
-                          )
-                        }
-                        className="h-11"
+                        placeholder="REPS"
+                        aria-label={`Set ${index + 1} repetitions`}
                         disabled={pending}
+                        onChange={(value) =>
+                          updateSet(exercise.id, set.id, "reps", value)
+                        }
                       />
+                      <span className="size-11 shrink-0" />
                     </div>
-                    <Button
-                      type="button"
-                      variant="ghost"
-                      size="icon"
-                      aria-label={`Delete set ${index + 1}`}
-                      className="size-11 text-destructive"
-                      disabled={pending}
-                      onClick={() => removeSet(exercise.id, set.id)}
-                    >
-                      <Trash2 className="size-4" />
-                    </Button>
                   </div>
                 ) : (
                   <p key={set.id} className="text-sm">

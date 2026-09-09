@@ -1,9 +1,9 @@
 # PRD - Gym Workout PWA
 
-Verzija: 1.9
+Verzija: 2.0
 Datum: 8. septembar 2026.
 Poslednji update: 9. septembar 2026.
-Status: u razvoju — faza 10 kod spreman, čeka iPhone E2E i Vercel
+Status: faza 10 završena — čeka Connect Vercel
 
 ---
 
@@ -16,8 +16,8 @@ Status: u razvoju — faza 10 kod spreman, čeka iPhone E2E i Vercel
 | | |
 |---|---|
 | **Aktivna faza** | 10 — Završnica |
-| **Sledeći korak** | iPhone E2E, zatim Connect GitHub i Connect Vercel |
-| **Blokirano od vlasnika** | Connect GitHub (push još nije urađen); Connect Vercel |
+| **Sledeći korak** | Connect Vercel |
+| **Blokirano od vlasnika** | Connect Vercel |
 
 ### Napredak po fazama
 
@@ -32,7 +32,7 @@ Status: u razvoju — faza 10 kod spreman, čeka iPhone E2E i Vercel
 | 7 | Sadržaj | ✅ Završeno | 2026-09-09 | iPhone E2E prošao; ispravljeno čuvanje neizmenjenog imena templatea |
 | 8 | Istorija | ✅ Završeno | 2026-09-09 | iPhone E2E prošao — edit setova/datuma, add/delete set, brisanje treninga |
 | 9 | Progres | ✅ Završeno | 2026-09-09 | PR view, Recharts, stranica vežbe — iPhone E2E prošao |
-| 10 | Završnica | 🔄 Kod spreman | 2026-09-09 | Čeka iPhone E2E i Vercel |
+| 10 | Završnica | ✅ Završeno | 2026-09-09 | iPhone E2E prošao; GitHub `zulezuckasti-droid/gym` pushovan ručno |
 
 ### Detalji završenih faza
 
@@ -56,7 +56,7 @@ Status: u razvoju — faza 10 kod spreman, čeka iPhone E2E i Vercel
 - [x] TypeScript tipovi u `lib/database.types.ts`
 - [x] `.env.local` sa Supabase URL i publishable key
 - [x] Security advisor: `anon` revoke na RPC funkcijama
-- [ ] GitHub push (repo još nije kreiran)
+- [x] GitHub push — `zulezuckasti-droid/gym`, grana `main` (ručno od vlasnika)
 
 **Faza 3 — Auth**
 - [x] `@supabase/supabase-js` + `@supabase/ssr` instalirani
@@ -152,9 +152,10 @@ Status: u razvoju — faza 10 kod spreman, čeka iPhone E2E i Vercel
 - [x] Serwist service worker (`@serwist/turbopack`), app shell cache, `/offline`
 - [x] Ikonice 192/512 i `apple-touch-icon`; `overscroll-behavior: none`
 - [x] Lint i production build prolaze
-- [ ] iPhone E2E — puna specifikacija
+- [x] iPhone E2E — puna specifikacija
+- [x] Polish: ±1 kg/reps na numpadu i istoriji; hover/press na karticama (bez delay animacija)
 - [ ] Vercel deploy (Connect Vercel od vlasnika)
-- [ ] GitHub push (Connect GitHub od vlasnika)
+- [x] GitHub push — `zulezuckasti-droid/gym` (ručno od vlasnika)
 
 ### Infrastruktura
 
@@ -163,7 +164,7 @@ Status: u razvoju — faza 10 kod spreman, čeka iPhone E2E i Vercel
 | Supabase projekat | ✅ `gabxxzxniarebovrhsjy` |
 | Lokalne migracije | ✅ 9 fajlova |
 | Env varijable | ✅ `.env.local` |
-| GitHub repo `gym` | ⏳ Nije kreiran |
+| GitHub repo `gym` | ✅ `zulezuckasti-droid/gym`, `main` |
 | Vercel deploy | ⏳ Čeka Connect Vercel |
 
 ---
@@ -347,7 +348,8 @@ S leva na desno: broj seta, sivi tekst prethodnog rezultata (`80 kg x 8`), polje
 Za prvi unos, kada nema istorije, otvara se bottom sheet numpad:
 
 - Cifre 0-9, decimalna točka, backspace
-- Brzi dugmići `-2.5` i `+2.5`
+- Plus i minus pored vrednosti: `±1` kg ili `±1` reps
+- Brzi dugmići `-2.5` i `+2.5` za kilažu
 - `Next` i potvrda
 - Tok unosa: KG, `Next`, REPS, potvrda. Potvrda čuva set i automatski fokusira sledeći.
 - Polja za unos su `readOnly`, da iOS sistemska tastatura nikada ne prekrije ekran.
@@ -599,7 +601,7 @@ Svaka tačka je završena tek kada acceptance kriterijum prođe. **Posle svake z
 | 7 | Sadržaj | ✅ | Biblioteka, template CRUD, Empty Workout, ad-hoc vežbe | Korisnik kreira sopstveni template — iPhone E2E prošao |
 | 8 | Istorija | ✅ | Read-only već postoji; dodati editovanje, promenu datuma, brisanje | Edit ne kvari PR podatke — iPhone E2E prošao |
 | 9 | Progres | ✅ | PR, stranica vežbe, grafikoni (Recharts) | Grafikoni odražavaju stvarne podatke — iPhone E2E prošao |
-| 10 | Završnica | 🔄 Kod spreman | Superseti, bodyweight, dnd-kit, PIN, wake lock, export, Serwist, Vercel | Puna specifikacija funkcionalna na iPhoneu |
+| 10 | Završnica | ✅ | Superseti, bodyweight, dnd-kit, PIN, wake lock, export, Serwist, Vercel | Puna specifikacija funkcionalna na iPhoneu |
 
 **Pravila protiv preopterećenja:**
 - Jedna vertikalna celina po iteraciji.
@@ -613,10 +615,9 @@ Svaka tačka je završena tek kada acceptance kriterijum prođe. **Posle svake z
 
 ### 13.1 Git (agent)
 
-- ⏳ Kreira privatan GitHub repo `gym`
-- ⏳ Povezuje `origin`, prebacuje glavnu granu sa `master` na `main`
-- ⏳ Pushuje proverene kontrolne tačke (posle svake faze iz tabele u sekciji 12)
-- Za GitHub povezivanje može biti potreban jednokratni Connect GitHub korak od vlasnika
+- ✅ GitHub repo `gym` — `zulezuckasti-droid/gym` (vlasnik pushovao ručno)
+- ✅ `origin` povezan, glavna grana `main`
+- ✅ Pushovane kontrolne tačke (faze 7–10 na `origin/main`)
 
 ### 13.2 Supabase (agent, preko MCP-a)
 
@@ -625,7 +626,7 @@ Agent izvršava kompletan Supabase posao:
 - ✅ Migracije, RLS politike, view, RPC, seed funkcije
 - ✅ Security advisor proveren; `anon` revoke na RPC
 - ✅ Env varijable u `.env.local`
-- ⏳ Regeneracija TypeScript tipova posle svake šema promene
+- ✅ TypeScript tipovi u `lib/database.types.ts` (regenerisati posle sledeće šema promene)
 
 SQL, migracije i ručne Supabase korake ne ostavljati vlasniku.
 
@@ -633,7 +634,8 @@ SQL, migracije i ručne Supabase korake ne ostavljati vlasniku.
 
 - ✅ Email adresa za test magic linka (Faza 3) — `mihailozz92@gmail.com`
 - ✅ Potvrda Supabase cene ($0/mesec, free tier)
-- ⏳ Jednokratno Connect GitHub (za push) i Connect Vercel (Faza 10)
+- ✅ Connect GitHub — repo pushovan ručno
+- ⏳ Connect Vercel (Faza 10)
 
 ---
 
@@ -643,7 +645,7 @@ Sve odluke donesene kroz 60 pitanja, radi kasnijeg podsećanja zašto je nešto 
 
 **Unos**
 - Polja prepopulirana prošlim vrednostima, potvrda jednim tapom
-- Custom numpad za prvi unos, sa decimalnom točkom i dugmićima -2.5 i +2.5
+- Custom numpad za prvi unos, sa decimalnom točkom, ±1 kg/reps i dugmićima -2.5 i +2.5
 - Novi set nasleđuje vrednosti prethodnog seta
 - Slobodan unos kilaže sa decimalama, samo kilogrami
 

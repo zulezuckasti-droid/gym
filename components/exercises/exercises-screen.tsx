@@ -26,6 +26,7 @@ import {
 import type { ExerciseRow } from "@/lib/content/queries";
 import { groupExercisesByMuscle } from "@/lib/content/grouping";
 import { commitIme, formText, nameFieldProps } from "@/lib/form/live-text";
+import { cn, pressableClass } from "@/lib/utils";
 
 export function ExercisesScreen({
   exercises,
@@ -139,7 +140,7 @@ export function ExercisesScreen({
               </h2>
               <div className="space-y-2">
                 {items.map((exercise) => (
-                  <Card key={exercise.id} className="py-0">
+                  <Card key={exercise.id} className={cn("py-0", pressableClass)}>
                     <CardContent className="p-0">
                       <Link
                         href={`/exercises/${exercise.id}`}

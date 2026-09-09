@@ -86,6 +86,19 @@ export function parseReps(value: string): number | null {
   return Number.isInteger(parsed) && parsed >= 0 ? parsed : null;
 }
 
+export function stepNumericInput(
+  value: string,
+  delta: number,
+  options?: { integer?: boolean },
+): string {
+  const current = options?.integer
+    ? (parseReps(value) ?? 0)
+    : (parseWeight(value) ?? 0);
+  const next = Math.max(0, current + delta);
+  if (options?.integer) return String(Math.round(next));
+  return String(Math.round(next * 100) / 100);
+}
+
 export function canConfirmSet(
   set: DraftSet,
   type: ExerciseType = "weight_reps",

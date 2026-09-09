@@ -27,6 +27,7 @@ import {
 } from "@/lib/progress/helpers";
 import { formatDate } from "@/lib/workout/helpers";
 import type { ProgressData } from "@/lib/progress/types";
+import { cn, pressableClass } from "@/lib/utils";
 
 const weightConfig = {
   value: {
@@ -101,7 +102,7 @@ export function ProgressScreen({ data }: { data: ProgressData }) {
                 {data.prs.map((pr) => (
                   <li key={pr.exerciseId}>
                     <Link href={`/exercises/${pr.exerciseId}`} className="block">
-                      <Card className="py-0">
+                      <Card className={cn("py-0", pressableClass)}>
                         <CardContent className="flex min-h-14 items-center justify-between gap-3 px-4 py-3">
                           <p className="min-w-0 truncate font-medium">{pr.name}</p>
                           <div className="shrink-0 text-right">

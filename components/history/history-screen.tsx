@@ -11,6 +11,7 @@ import {
 } from "@/lib/workout/helpers";
 import { useWorkoutStore } from "@/lib/workout/store";
 import type { WorkoutView } from "@/lib/workout/types";
+import { cn, pressableClass } from "@/lib/utils";
 
 export function HistoryScreen({
   workouts,
@@ -52,7 +53,7 @@ export function HistoryScreen({
           {items.map((workout) => (
             <li key={workout.id}>
               <Link href={`/history/${workout.id}`} className="block">
-                <Card className="py-0">
+                <Card className={cn("py-0", pressableClass)}>
                   <CardContent className="flex min-h-20 items-center justify-between gap-3 px-4 py-4">
                     <div>
                       <p className="font-medium">{workout.name}</p>

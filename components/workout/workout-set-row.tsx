@@ -35,7 +35,7 @@ export function WorkoutSetRow({
   return (
     <div
       className={cn(
-        "grid items-center gap-1 rounded-lg p-0.5",
+        "grid items-center gap-1 rounded-lg p-0.5 transition-colors duration-200",
         slotLabel
           ? "grid-cols-[2rem_2.5rem_3.5rem_3rem_3rem_2.75rem]"
           : "grid-cols-[2.75rem_3.75rem_3.25rem_3.25rem_2.75rem]",
@@ -74,7 +74,7 @@ export function WorkoutSetRow({
         aria-label={`${exercise.name} set ${set.setIndex} ${weightLabel}`}
         value={set.weight}
         placeholder={type === "bodyweight" ? "+kg" : undefined}
-        className="h-11 px-1 text-center"
+        className="h-11 px-1 text-center transition-colors duration-150 hover:bg-muted/40"
         disabled={completed}
         onClick={() => onOpenNumpad(set.id, "weight")}
       />
@@ -82,7 +82,7 @@ export function WorkoutSetRow({
         readOnly
         aria-label={`${exercise.name} set ${set.setIndex} reps`}
         value={set.reps}
-        className="h-11 px-1 text-center"
+        className="h-11 px-1 text-center transition-colors duration-150 hover:bg-muted/40"
         disabled={completed}
         onClick={() => onOpenNumpad(set.id, "reps")}
       />
@@ -91,7 +91,7 @@ export function WorkoutSetRow({
           type="button"
           size="icon-lg"
           variant={set.confirmed ? "default" : "outline"}
-          className="size-11"
+          className="size-11 transition-transform duration-150 active:scale-95"
           aria-label={
             set.confirmed
               ? `Unconfirm set ${set.setIndex}`
@@ -103,7 +103,7 @@ export function WorkoutSetRow({
           <Check className="size-5" />
         </Button>
         {isPersonalRecordSet(exercise, set) ? (
-          <span className="absolute -top-2 -right-1 rounded bg-amber-400 px-1 text-[9px] font-bold text-black">
+          <span className="absolute -top-2 -right-1 animate-in fade-in-0 zoom-in-95 duration-200 rounded bg-amber-400 px-1 text-[9px] font-bold text-black">
             PR
           </span>
         ) : null}

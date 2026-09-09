@@ -1,6 +1,6 @@
 "use client";
 
-import { Delete } from "lucide-react";
+import { Delete, Minus, Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   Drawer,
@@ -9,6 +9,7 @@ import {
   DrawerHeader,
   DrawerTitle,
 } from "@/components/ui/drawer";
+import { parseReps, parseWeight, stepNumericInput } from "@/lib/workout/helpers";
 
 type WorkoutNumpadProps = {
   open: boolean;
@@ -44,10 +45,14 @@ export function WorkoutNumpad({
     onValueChange(`${value}${key}`);
   }
 
-  function changeWeight(delta: number) {
-    const current = Number(value.replace(",", ".")) || 0;
-    onValueChange(String(Math.max(0, current + delta)));
+  function changeBy(delta: number) {
+    onValueChange(
+      stepNumericInput(value, delta, { integer: field === "reps" }),
+    );
   }
+
+  const current =
+    field === "reps" ? (parseReps(value) ?? 0) : (parseWeight(value) ?? 0);
 
   return (
     <Drawer open={open} onOpenChange={onOpenChange} showSwipeHandle>
@@ -64,25 +69,57 @@ export function WorkoutNumpad({
         </DrawerHeader>
 
         <div className="px-4 pb-[max(1rem,env(safe-area-inset-bottom))]">
-          <div className="mb-3 rounded-xl bg-muted px-4 py-3 text-center text-3xl font-semibold tabular-nums">
-            {value || "0"}
+          <div className="mb-3 flex items-center gap-2">
+            <Button
+              type="button"
+              variant="secondary"
+              size="icon-lg"
+              className="size-14 shrink-0"
+              aria-label={
+                field === "reps"
+                  ? "Decrease by 1 rep"
+                  : "Decrease by 1 kilogram"
+              }
+              disabled={current <= 0}
+              onClick={() => changeBy(-1)}
+            >
+              <Minus className="size-5" />
+            </Button>
+            <div className="min-w-0 flex-1 rounded-xl bg-muted px-3 py-3 text-center text-3xl font-semibold tabular-nums">
+              {value || "0"}
+            </div>
+            <Button
+              type="button"
+              variant="secondary"
+              size="icon-lg"
+              className="size-14 shrink-0"
+              aria-label={
+                field === "reps"
+                  ? "Increase by 1 rep"
+                  : "Increase by 1 kilogram"
+              }
+              onClick={() => changeBy(1)}
+            >
+              <Plus className="size-5" />
+            </Button>
           </div>
 
           {field === "weight" ? (
             <div className="mb-2 grid grid-cols-2 gap-2">
               <Button
                 type="button"
-                variant="secondary"
+                variant="outline"
                 className="h-11"
-                onClick={() => changeWeight(-2.5)}
+                disabled={current <= 0}
+                onClick={() => changeBy(-2.5)}
               >
                 −2.5
               </Button>
               <Button
                 type="button"
-                variant="secondary"
+                variant="outline"
                 className="h-11"
-                onClick={() => changeWeight(2.5)}
+                onClick={() => changeBy(2.5)}
               >
                 +2.5
               </Button>

@@ -31,13 +31,19 @@ export function BottomNav() {
               key={href}
               href={href}
               className={cn(
-                "flex min-h-11 flex-1 flex-col items-center justify-center gap-0.5 text-xs font-medium transition-colors",
+                "flex min-h-11 flex-1 flex-col items-center justify-center gap-0.5 text-xs font-medium transition-colors duration-150",
                 isActive
                   ? "text-primary"
                   : "text-muted-foreground hover:text-foreground",
               )}
             >
-              <Icon className="size-5" aria-hidden />
+              <Icon
+                className={cn(
+                  "size-5 transition-transform duration-150",
+                  isActive && "scale-110",
+                )}
+                aria-hidden
+              />
               <span>{label}</span>
             </Link>
           );

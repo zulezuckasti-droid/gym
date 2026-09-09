@@ -24,6 +24,7 @@ import {
 } from "@/lib/workout/helpers";
 import { useWorkoutStore } from "@/lib/workout/store";
 import type { DraftExercise } from "@/lib/workout/types";
+import { cn, pressableClass } from "@/lib/utils";
 
 type ActiveInput = {
   setId: string;
@@ -61,7 +62,7 @@ export function WorkoutExerciseCard({
       (set) => set.confirmed && !set.isWarmup,
     ).length;
     return (
-      <Card className="py-0">
+      <Card className={cn("py-0", pressableClass)}>
         <button
           type="button"
           className="flex min-h-16 w-full items-center gap-3 px-4 py-3 text-left"
@@ -74,7 +75,7 @@ export function WorkoutExerciseCard({
               {formatVolume(draftExerciseVolume(exercise))}
             </span>
           </span>
-          <ChevronDown className="size-5 shrink-0 text-muted-foreground" />
+          <ChevronDown className="size-5 shrink-0 text-muted-foreground transition-transform duration-150" />
         </button>
       </Card>
     );
