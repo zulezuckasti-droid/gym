@@ -20,13 +20,13 @@ export default async function SettingsPage() {
           <div className="mt-2 flex flex-col gap-2">
             <Link
               href="/templates"
-              className="flex min-h-11 items-center text-sm font-medium transition-colors duration-150 hover:text-primary"
+              className="flex min-h-11 items-center text-sm font-medium transition-colors duration-150 hover:text-primary active:text-primary"
             >
               Manage templates
             </Link>
             <Link
               href="/exercises"
-              className="flex min-h-11 items-center text-sm font-medium transition-colors duration-150 hover:text-primary"
+              className="flex min-h-11 items-center text-sm font-medium transition-colors duration-150 hover:text-primary active:text-primary"
             >
               Exercise library
             </Link>

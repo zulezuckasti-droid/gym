@@ -1,5 +1,28 @@
+import { AUTH_HEADER } from "@/lib/auth/constants";
 import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
+
+function withAuthHeader(
+  request: NextRequest,
+  source: NextResponse,
+  authenticated: boolean,
+) {
+  const requestHeaders = new Headers(request.headers);
+  requestHeaders.set(AUTH_HEADER, authenticated ? "1" : "0");
+  const response = NextResponse.next({
+    request: { headers: requestHeaders },
+  });
+
+  source.cookies.getAll().forEach((cookie) => {
+    response.cookies.set(cookie);
+  });
+  source.headers.forEach((value, key) => {
+    if (key.toLowerCase() === "set-cookie") return;
+    response.headers.set(key, value);
+  });
+
+  return response;
+}
 
 export async function updateSession(request: NextRequest) {
   let supabaseResponse = NextResponse.next({
@@ -51,5 +74,5 @@ export async function updateSession(request: NextRequest) {
     return NextResponse.redirect(url);
   }
 
-  return supabaseResponse;
+  return withAuthHeader(request, supabaseResponse, Boolean(user));
 }

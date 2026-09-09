@@ -1,7 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
+import { useEffect, useState } from "react";
 import { ChartLine, Clock, Home, Settings } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -14,6 +15,16 @@ const tabs = [
 
 export function BottomNav() {
   const pathname = usePathname();
+  const router = useRouter();
+  const [clickedHref, setClickedHref] = useState<string | null>(null);
+  const pendingHref =
+    clickedHref && clickedHref !== pathname ? clickedHref : null;
+
+  useEffect(() => {
+    for (const tab of tabs) {
+      router.prefetch(tab.href);
+    }
+  }, [router]);
 
   return (
     <nav
@@ -25,22 +36,26 @@ export function BottomNav() {
         {tabs.map(({ href, label, icon: Icon }) => {
           const isActive =
             href === "/" ? pathname === "/" : pathname.startsWith(href);
+          const isPending = pendingHref === href;
 
           return (
             <Link
               key={href}
               href={href}
+              onClick={() => {
+                if (!isActive) setClickedHref(href);
+              }}
               className={cn(
                 "flex min-h-11 flex-1 flex-col items-center justify-center gap-0.5 text-xs font-medium transition-colors duration-150",
-                isActive
+                isActive || isPending
                   ? "text-primary"
-                  : "text-muted-foreground hover:text-foreground",
+                  : "text-muted-foreground active:text-foreground",
               )}
             >
               <Icon
                 className={cn(
                   "size-5 transition-transform duration-150",
-                  isActive && "scale-110",
+                  (isActive || isPending) && "scale-110",
                 )}
                 aria-hidden
               />

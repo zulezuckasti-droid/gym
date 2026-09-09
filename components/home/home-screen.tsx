@@ -120,13 +120,13 @@ export function HomeScreen({
         <div className="flex gap-2 text-sm">
           <Link
             href="/templates"
-            className="min-h-11 px-2 py-2 text-muted-foreground transition-colors duration-150 hover:text-foreground"
+            className="min-h-11 px-2 py-2 text-muted-foreground transition-colors duration-150 hover:text-foreground active:text-foreground"
           >
             Templates
           </Link>
           <Link
             href="/exercises"
-            className="min-h-11 px-2 py-2 text-muted-foreground transition-colors duration-150 hover:text-foreground"
+            className="min-h-11 px-2 py-2 text-muted-foreground transition-colors duration-150 hover:text-foreground active:text-foreground"
           >
             Exercises
           </Link>
@@ -139,7 +139,7 @@ export function HomeScreen({
           onClick={handleContinue}
           className={cn(
             pressableClass,
-            "mt-4 min-h-14 rounded-xl bg-primary/15 px-4 py-3 text-left ring-1 ring-primary/30 hover:bg-primary/25",
+            "mt-4 min-h-14 rounded-xl bg-primary/15 px-4 py-3 text-left ring-1 ring-primary/30 hover:bg-primary/25 active:bg-primary/25",
           )}
         >
           <p className="text-sm font-medium text-primary">

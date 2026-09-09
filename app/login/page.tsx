@@ -14,7 +14,7 @@ export default async function LoginPage({
   const authError = params.error === "auth";
 
   return (
-    <main className="flex min-h-full flex-col items-center justify-center px-4 py-12">
+    <main className="flex min-h-full flex-col items-center justify-center px-4 pt-[max(3rem,var(--safe-area-top))] pb-[max(3rem,var(--safe-area-bottom))]">
       <Card className="w-full max-w-sm">
         <CardHeader className="text-center">
           <CardTitle className="text-2xl">Gym</CardTitle>

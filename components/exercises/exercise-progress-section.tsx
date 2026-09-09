@@ -129,7 +129,7 @@ export function ExerciseProgressSection({
                 <CardTitle className="text-base">
                   <Link
                     href={`/history/${group.workoutId}`}
-                    className="hover:text-primary"
+                    className="hover:text-primary active:text-primary"
                   >
                     {group.workoutName}
                   </Link>

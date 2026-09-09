@@ -74,7 +74,7 @@ export function WorkoutSetRow({
         aria-label={`${exercise.name} set ${set.setIndex} ${weightLabel}`}
         value={set.weight}
         placeholder={type === "bodyweight" ? "+kg" : undefined}
-        className="h-11 px-1 text-center transition-colors duration-150 hover:bg-muted/40"
+        className="h-11 px-1 text-center transition-colors duration-150 hover:bg-muted/40 active:bg-muted/40"
         disabled={completed}
         onClick={() => onOpenNumpad(set.id, "weight")}
       />
@@ -82,7 +82,7 @@ export function WorkoutSetRow({
         readOnly
         aria-label={`${exercise.name} set ${set.setIndex} reps`}
         value={set.reps}
-        className="h-11 px-1 text-center transition-colors duration-150 hover:bg-muted/40"
+        className="h-11 px-1 text-center transition-colors duration-150 hover:bg-muted/40 active:bg-muted/40"
         disabled={completed}
         onClick={() => onOpenNumpad(set.id, "reps")}
       />

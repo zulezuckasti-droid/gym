@@ -3,7 +3,7 @@ import { Geist, Geist_Mono } from "next/font/google";
 import { PinGate } from "@/components/pin/pin-gate";
 import { SerwistProvider } from "@/components/pwa/serwist-provider";
 import { WorkoutBootstrap } from "@/components/workout/workout-bootstrap";
-import { createClient } from "@/lib/supabase/server";
+import { isAuthenticatedRequest } from "@/lib/auth/is-authenticated";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -38,9 +38,7 @@ export const viewport: Viewport = {
 };
 
 export default async function RootLayout({ children }: LayoutProps<"/">) {
-  const supabase = await createClient();
-  const { data } = await supabase.auth.getClaims();
-  const authenticated = Boolean(data?.claims);
+  const authenticated = await isAuthenticatedRequest();
 
   return (
     <html
